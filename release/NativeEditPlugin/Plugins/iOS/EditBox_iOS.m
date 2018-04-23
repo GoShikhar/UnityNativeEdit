@@ -53,9 +53,22 @@ bool approxEqualFloat(float x, float y)
     dictEditBox = [[NSMutableDictionary alloc] init];
     
     CGRect frameView = unityViewController.view.frame;
-    frameView.origin = CGPointMake(0.0f, 0.0f);
     viewPlugin = [[EditBoxHoldView alloc] initHoldView:frameView];
-    [unityViewController.view addSubview:viewPlugin];
+    [viewPlugin setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [[unityViewController view] addSubview:viewPlugin];
+    
+    NSArray *attributes = @[@(NSLayoutAttributeLeft), @(NSLayoutAttributeTop), @(NSLayoutAttributeRight), @(NSLayoutAttributeBottom)];
+    NSMutableArray *constraints = [NSMutableArray array];
+    [attributes enumerateObjectsUsingBlock:^(id  _Nonnull attribute, NSUInteger idx, BOOL * _Nonnull stop) {
+        [constraints addObject:[NSLayoutConstraint constraintWithItem:viewPlugin
+                                                            attribute:[attribute integerValue]
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:[viewPlugin superview]
+                                                            attribute:[attribute integerValue]
+                                                           multiplier:1.0f
+                                                             constant:0.0f]];
+    }];
+    [NSLayoutConstraint activateConstraints:constraints];
     
     strcpy(g_unityName, unityName);
 }
