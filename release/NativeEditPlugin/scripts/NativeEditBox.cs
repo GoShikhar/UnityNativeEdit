@@ -155,7 +155,7 @@ public class NativeEditBox : PluginMsgReceiver
 		// Wait until the end of frame before initializing to ensure that Unity UI layout has been built. We used to
 		// initialize at Start, but that resulted in an invalid RectTransform position and size on the InputField if it
 		// was instantiated at runtime instead of being built in to the scene.
-		StartCoroutine(InitialzieOnNextFrame());
+		StartCoroutine(this.InitializeOnNextFrame());
 	}
 
 	private void OnEnable()
@@ -185,7 +185,7 @@ public class NativeEditBox : PluginMsgReceiver
 		this.SetVisible(hasFocus);
 	}
 
-	private IEnumerator InitialzieOnNextFrame()
+	private IEnumerator InitializeOnNextFrame()
 	{
 		yield return null;
 
