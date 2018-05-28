@@ -37,7 +37,7 @@ bool approxEqualFloat(float x, float y)
     {
         if ([eb IsFocused])
         {
-            [eb showKeyboard:NO];
+            [eb hideKeyboard];
         }
     }
 }
@@ -427,7 +427,7 @@ bool approxEqualFloat(float x, float y)
 
 -(IBAction) doneClicked:(id)sender
 {
-    [self showKeyboard:false];
+    [self hideKeyboard];
 }
 
 -(int) getLineCount
@@ -441,7 +441,6 @@ bool approxEqualFloat(float x, float y)
     }
     return 0;
 }
-
 
 -(void) remove
 {
@@ -482,13 +481,14 @@ bool approxEqualFloat(float x, float y)
     return editView.isFirstResponder;
 }
 
--(void) showKeyboard:(bool)isShow
+-(void) hideKeyboard
 {
-    [viewController.view endEditing:(isShow ? YES : NO)];
+    [editView resignFirstResponder];
 }
+
 -(void) setVisible:(bool)isVisible
 {
-    editView.hidden = (isVisible ? NO : YES);
+    editView.hidden = !isVisible;
 }
 
 -(void) onTextChange:(NSString*) text

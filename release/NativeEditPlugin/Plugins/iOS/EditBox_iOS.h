@@ -39,6 +39,6 @@
 +(JsonObject*) processRecvJsonMsg:(int)nSenderId msg:(JsonObject*) jsonMsg;
 +(void) finalizeEditBox;
 
--(void) showKeyboard:(bool)isShow;
+-(void) hideKeyboard;
 -(BOOL) IsFocused;
 @end
