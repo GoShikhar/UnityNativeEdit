@@ -69,6 +69,7 @@ public class NativeEditBox : PluginMsgReceiver
 	public bool updateRectEveryFrame;
 	public bool useInputFieldFont;
 	public UnityEngine.Events.UnityEvent OnReturnPressed;
+	public UnityEngine.Events.UnityEvent OnBeginEditing;
 
 	private bool bNativeEditCreated = false;
 
@@ -84,6 +85,7 @@ public class NativeEditBox : PluginMsgReceiver
 	private const string MSG_SET_FOCUS = "SetFocus";
 	private const string MSG_SET_VISIBLE = "SetVisible";
 	private const string MSG_TEXT_CHANGE = "TextChange";
+	private const string MSG_TEXT_BEGIN_EDIT = "TextBeginEdit";
 	private const string MSG_TEXT_END_EDIT = "TextEndEdit";
 	// to fix bug Some keys 'back' & 'enter' are eaten by unity and never arrive at plugin
 	private const string MSG_ANDROID_KEY_DOWN = "AndroidKeyDown";
@@ -268,6 +270,11 @@ public class NativeEditBox : PluginMsgReceiver
 		{
 			string text = jsonMsg.GetString("text");
 			this.onTextChange(text);
+		}
+		else if (msg.Equals(MSG_TEXT_BEGIN_EDIT))
+		{
+			if (this.OnBeginEditing != null)
+				this.OnBeginEditing.Invoke();
 		}
 		else if (msg.Equals(MSG_TEXT_END_EDIT))
 		{
