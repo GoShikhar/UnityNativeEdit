@@ -491,12 +491,22 @@ bool approxEqualFloat(float x, float y)
     editView.hidden = !isVisible;
 }
 
+#pragma mark - Common callbacks
+
 -(void) onTextChange:(NSString*) text
 {
     JsonObject* jsonToUnity = [[JsonObject alloc] init];
     
     [jsonToUnity setString:@"msg" value:MSG_TEXT_CHANGE];
     [jsonToUnity setString:@"text" value:text];
+    [self sendJsonToUnity:jsonToUnity];
+}
+
+-(void) onTextEditBegin
+{
+    JsonObject* jsonToUnity = [[JsonObject alloc] init];
+    
+    [jsonToUnity setString:@"msg" value:MSG_TEXT_BEGIN_EDIT];
     [self sendJsonToUnity:jsonToUnity];
 }
 
@@ -509,14 +519,33 @@ bool approxEqualFloat(float x, float y)
     [self sendJsonToUnity:jsonToUnity];
 }
 
--(void) textViewDidChange:(UITextView *)textView
+#pragma mark - UITextViewDelegate
+
+- (void)textViewDidBeginEditing:(UITextView *)textView
 {
-    [self onTextChange:textView.text];
+    [self onTextEditBegin];
 }
 
 -(void) textViewDidEndEditing:(UITextView *)textView
 {
     [self onTextEditEnd:textView.text];
+}
+
+-(void) textViewDidChange:(UITextView *)textView
+{
+    [self onTextChange:textView.text];
+}
+
+#pragma mark - UITextFieldDelegate
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    [self onTextEditBegin];
+}
+
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
+    [self onTextEditEnd:textField.text];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
@@ -543,6 +572,8 @@ bool approxEqualFloat(float x, float y)
         return YES;
 }
 
+#pragma mark - Other targets
+
 -(void) textFieldDidChange :(UITextField *)theTextField{
     [self onTextChange:theTextField.text];
 }
@@ -554,13 +585,12 @@ bool approxEqualFloat(float x, float y)
     NSDictionary* keyboardInfo = [notification userInfo];
     NSValue* keyboardFrameBegin = [keyboardInfo valueForKey:UIKeyboardFrameBeginUserInfoKey];
     rectKeyboardFrame = [keyboardFrameBegin CGRectValue];
-
 }
 
 -(void) keyboardWillHide:(NSNotification*)notification
 {
-    if (![editView isFirstResponder]) return;
-
+    if (![editView isFirstResponder])
+        return;
 }
 
 -(float) getKeyboardheight

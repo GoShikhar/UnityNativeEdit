@@ -13,6 +13,7 @@
 #define MSG_SET_FOCUS @"SetFocus"
 #define MSG_SET_VISIBLE @"SetVisible"
 #define MSG_TEXT_CHANGE @"TextChange"
+#define MSG_TEXT_BEGIN_EDIT @"TextBeginEdit"
 #define MSG_TEXT_END_EDIT @"TextEndEdit"
 #define MSG_RETURN_PRESSED @"ReturnPressed"
 
