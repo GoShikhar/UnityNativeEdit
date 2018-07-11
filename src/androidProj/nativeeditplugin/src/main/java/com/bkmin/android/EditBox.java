@@ -58,6 +58,7 @@ public class EditBox {
     private static final String MSG_SET_FOCUS = "SetFocus";
     private static final String MSG_SET_VISIBLE = "SetVisible";
     private static final String MSG_TEXT_CHANGE = "TextChange";
+    private static final String MSG_TEXT_BEGIN_EDIT = "TextBeginEdit";
     private static final String MSG_TEXT_END_EDIT = "TextEndEdit";
     private static final String MSG_ANDROID_KEY_DOWN = "AndroidKeyDown";
     private static final String MSG_RETURN_PRESSED = "ReturnPressed";
@@ -319,17 +320,16 @@ public class EditBox {
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
 
-                    if (!hasFocus) {
-                        // your action here
-                        JSONObject msgTextEndJSON = new JSONObject();
-                        try
-                        {
-                            msgTextEndJSON.put("msg", MSG_TEXT_END_EDIT);
-                            msgTextEndJSON.put("text", eb.GetText());
-                        }
-                        catch(JSONException e) {}
-                        eb.SendJsonToUnity(msgTextEndJSON);
+                    // your action here
+                    JSONObject msgTextEndJSON = new JSONObject();
+                    try
+                    {
+                        msgTextEndJSON.put("msg", hasFocus ? MSG_TEXT_BEGIN_EDIT : MSG_TEXT_END_EDIT);
+                        msgTextEndJSON.put("text", eb.GetText());
                     }
+                    catch(JSONException e) {}
+                    eb.SendJsonToUnity(msgTextEndJSON);
+
                     SetFocus(hasFocus);
                 }
             });
