@@ -10,7 +10,6 @@ NSMutableDictionary*    dictEditBox = nil;
 EditBoxHoldView*         viewPlugin = nil;
 
 char    g_unityName[64];
-int characterLimit;
 
 bool approxEqualFloat(float x, float y)
 {
@@ -203,7 +202,7 @@ bool approxEqualFloat(float x, float y)
     float width = [json getFloat:@"width"] * viewController.view.bounds.size.width;
     float height = [json getFloat:@"height"] * viewController.view.bounds.size.height;
     
-    characterLimit = [json getInt:@"characterLimit"];
+    [self setMaxLength:[json getInt:@"characterLimit"]];
     
     float textColor_r = [json getFloat:@"textColor_r"];
     float textColor_g = [json getFloat:@"textColor_g"];
@@ -566,8 +565,8 @@ bool approxEqualFloat(float x, float y)
     }
     
     NSUInteger newLength = [textField.text length] + [string length] - range.length;
-    if(characterLimit > 0)
-        return newLength <= characterLimit;
+    if([self maxLength] > 0)
+        return newLength <= [self maxLength];
     else
         return YES;
 }

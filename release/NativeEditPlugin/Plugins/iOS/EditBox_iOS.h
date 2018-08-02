@@ -36,6 +36,8 @@
     int tag;
 }
 
+@property (nonatomic, assign) int maxLength;
+
 +(void) initializeEditBox:(UIViewController*) _unityViewController unityName:(const char*) unityName;
 +(JsonObject*) processRecvJsonMsg:(int)nSenderId msg:(JsonObject*) jsonMsg;
 +(void) finalizeEditBox;

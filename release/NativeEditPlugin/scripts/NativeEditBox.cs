@@ -194,7 +194,7 @@ public class NativeEditBox : PluginMsgReceiver
 		this.PrepareNativeEdit();
 		#if (UNITY_IPHONE || UNITY_ANDROID) && !UNITY_EDITOR
 		this.CreateNativeEdit();
-		this.SetTextNative(this.objUnityText.text);
+		this.SetTextNative(this.objUnityInput.text);
 
 		objUnityInput.placeholder.gameObject.SetActive(false);
 		objUnityText.enabled = false;
