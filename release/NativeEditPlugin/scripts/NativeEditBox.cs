@@ -381,9 +381,9 @@ public class NativeEditBox : PluginMsgReceiver
 
 	public void SetRectNative(RectTransform rectTrans)
 	{
-		Rect rectScreen = GetScreenRectFromRectTransform(rectTrans);
+		var rectScreen = GetScreenRectFromRectTransform(rectTrans);
 
-		JsonObject jsonMsg = new JsonObject();
+		var jsonMsg = new JsonObject();
 		jsonMsg["msg"] = MSG_SET_RECT;
 		jsonMsg["x"] = rectScreen.x / Screen.width;
 		jsonMsg["y"] = rectScreen.y / Screen.height;
@@ -391,12 +391,16 @@ public class NativeEditBox : PluginMsgReceiver
 		jsonMsg["height"] = rectScreen.height / Screen.height;
 		this.SendPluginMsg(jsonMsg);
 
-		JsonObject sizeMsg = new JsonObject();
-		sizeMsg["msg"] = MSG_SET_TEXTSIZE;
 		var fontRectHeightRatio = rectScreen.height / this.objUnityText.rectTransform.rect.height;
 		var fontSize = this.objUnityText.fontSize * fontRectHeightRatio;
-		sizeMsg["fontSize"] = fontSize;
-		this.SendPluginMsg(sizeMsg);
+		if (Math.Abs(this.mConfig.fontSize - fontSize) > 0.1f)
+		{
+			var sizeMsg = new JsonObject();
+			sizeMsg["msg"] = MSG_SET_TEXTSIZE;
+			sizeMsg["fontSize"] = fontSize;
+			this.SendPluginMsg(sizeMsg);
+			this.mConfig.fontSize = fontSize;
+		}
 	}
 
 	public void SetFocus(bool bFocus)
