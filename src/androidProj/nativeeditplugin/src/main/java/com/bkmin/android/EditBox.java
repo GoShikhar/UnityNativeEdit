@@ -481,12 +481,6 @@ public class EditBox {
             lp.setMargins(rect.left, rect.top, 0, 0);
             edit.setLayoutParams(lp);
 
-            if (jsonRect.has("fontSize"))
-            {
-                double fontSize = jsonRect.getDouble("fontSize");
-                edit.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) fontSize);
-            }
-
         } catch (JSONException e)
         {
         }
