@@ -55,6 +55,7 @@ public class EditBox {
     private static final String MSG_REMOVE = "RemoveEdit";
     private static final String MSG_SET_TEXT = "SetText";
     private static final String MSG_SET_RECT = "SetRect";
+    private static final String MSG_SET_TEXTSIZE = "SetTextSize";
     private static final String MSG_SET_FOCUS = "SetFocus";
     private static final String MSG_SET_VISIBLE = "SetVisible";
     private static final String MSG_TEXT_CHANGE = "TextChange";
@@ -141,6 +142,9 @@ public class EditBox {
                     break;
                 case MSG_SET_RECT:
                     this.SetRect(jsonMsg);
+                    break;
+                case MSG_SET_TEXTSIZE:
+                    this.SetTextSize(jsonMsg);
                     break;
                 case MSG_SET_FOCUS:
                     boolean isFocus = jsonMsg.getBoolean("isFocus");
@@ -452,6 +456,17 @@ public class EditBox {
         this.showKeyboard(isFocus);
     }
 
+    private void SetTextSize(JSONObject jsonRect)
+    {
+        try
+        {
+            double fontSize = jsonRect.getDouble("fontSize");
+            edit.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) fontSize);
+        } catch (JSONException e)
+        {
+        }
+    }
+
     private void SetRect(JSONObject jsonRect)
     {
         try
@@ -465,6 +480,12 @@ public class EditBox {
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(rect.width(), rect.height());
             lp.setMargins(rect.left, rect.top, 0, 0);
             edit.setLayoutParams(lp);
+
+            if (jsonRect.has("fontSize"))
+            {
+                double fontSize = jsonRect.getDouble("fontSize");
+                edit.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) fontSize);
+            }
 
         } catch (JSONException e)
         {

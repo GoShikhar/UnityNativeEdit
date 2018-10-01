@@ -82,6 +82,7 @@ public class NativeEditBox : PluginMsgReceiver
 	private const string MSG_REMOVE = "RemoveEdit";
 	private const string MSG_SET_TEXT = "SetText";
 	private const string MSG_SET_RECT = "SetRect";
+	private const string MSG_SET_TEXTSIZE = "SetTextSize";
 	private const string MSG_SET_FOCUS = "SetFocus";
 	private const string MSG_SET_VISIBLE = "SetVisible";
 	private const string MSG_TEXT_CHANGE = "TextChange";
@@ -383,19 +384,19 @@ public class NativeEditBox : PluginMsgReceiver
 		Rect rectScreen = GetScreenRectFromRectTransform(rectTrans);
 
 		JsonObject jsonMsg = new JsonObject();
-		
 		jsonMsg["msg"] = MSG_SET_RECT;
-
 		jsonMsg["x"] = rectScreen.x / Screen.width;
 		jsonMsg["y"] = rectScreen.y / Screen.height;
 		jsonMsg["width"] = rectScreen.width / Screen.width;
 		jsonMsg["height"] = rectScreen.height / Screen.height;
+		this.SendPluginMsg(jsonMsg);
 
+		JsonObject sizeMsg = new JsonObject();
+		sizeMsg["msg"] = MSG_SET_TEXTSIZE;
 		var fontRectHeightRatio = rectScreen.height / this.objUnityText.rectTransform.rect.height;
 		var fontSize = this.objUnityText.fontSize * fontRectHeightRatio;
-		jsonMsg["fontSize"] = fontSize;
-
-		this.SendPluginMsg(jsonMsg);
+		sizeMsg["fontSize"] = fontSize;
+		this.SendPluginMsg(sizeMsg);
 	}
 
 	public void SetFocus(bool bFocus)

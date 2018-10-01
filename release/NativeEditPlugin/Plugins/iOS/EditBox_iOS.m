@@ -153,6 +153,10 @@ bool approxEqualFloat(float x, float y)
     {
         [self setRect:jsonMsg];
     }
+    else if ([msg isEqualToString:MSG_SET_TEXTSIZE])
+    {
+        [self setTextSize:jsonMsg];
+    }
     else if ([msg isEqualToString:MSG_SET_FOCUS])
     {
         BOOL isFocus = [jsonMsg getBool:@"isFocus"];
@@ -188,6 +192,21 @@ bool approxEqualFloat(float x, float y)
     x -= editView.superview.frame.origin.x;
     y -= editView.superview.frame.origin.y;
     editView.frame = CGRectMake(x, y, width, height);
+}
+
+-(void) setTextSize:(JsonObject*)json
+{
+    float fontSize = [json getFloat:@"fontSize"];
+    // Conversion for retina displays
+    fontSize = fontSize / [UIScreen mainScreen].scale;
+    
+    if([editView isKindOfClass:[UITextField class]]) {
+        UITextField *textField = ((UITextField*)editView);
+        UIFont *newFont = [[textField font] fontWithSize:fontSize];
+    } else if([editView isKindOfClass:[UITextView class]]){
+        UITextView *textView = ((UITextView*)editView);
+        UIFont *newFont = [[textView font] fontWithSize:fontSize];
+    }
 }
 
 -(void) create:(JsonObject*)json
