@@ -391,6 +391,10 @@ public class NativeEditBox : PluginMsgReceiver
 		jsonMsg["width"] = rectScreen.width / Screen.width;
 		jsonMsg["height"] = rectScreen.height / Screen.height;
 
+		var fontRectHeightRatio = rectScreen.height / this.objUnityText.rectTransform.rect.height;
+		var fontSize = this.objUnityText.fontSize * fontRectHeightRatio;
+		jsonMsg["fontSize"] = fontSize;
+
 		this.SendPluginMsg(jsonMsg);
 	}
 
