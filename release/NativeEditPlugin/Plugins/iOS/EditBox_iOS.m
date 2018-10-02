@@ -200,12 +200,17 @@ bool approxEqualFloat(float x, float y)
     // Conversion for retina displays
     fontSize = fontSize / [UIScreen mainScreen].scale;
     
-    if([editView isKindOfClass:[UITextField class]]) {
+    if([editView isKindOfClass:[UITextField class]])
+    {
         UITextField *textField = ((UITextField*)editView);
         UIFont *newFont = [[textField font] fontWithSize:fontSize];
-    } else if([editView isKindOfClass:[UITextView class]]){
+        [textField setFont:newFont];
+    }
+    else if([editView isKindOfClass:[UITextView class]])
+    {
         UITextView *textView = ((UITextView*)editView);
         UIFont *newFont = [[textView font] fontWithSize:fontSize];
+        [textView setFont:newFont];
     }
 }
 
