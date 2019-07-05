@@ -31,177 +31,177 @@
  */
 
 
-using UnityEngine;
 using System;
 using System.Collections;
+using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(InputField))]
 public class NativeEditBox : PluginMsgReceiver
 {
-	private struct EditBoxConfig
-	{
-		public bool multiline;
-		public Color textColor;
-		public Color backColor;
-		public string contentType;
-		public string font;
-		public float fontSize;
-		public string align;
-		public string placeHolder;
-		public int characterLimit;
-		public Color placeHolderColor;
-	}
+    private struct EditBoxConfig
+    {
+        public bool multiline;
+        public Color textColor;
+        public Color backColor;
+        public string contentType;
+        public string font;
+        public float fontSize;
+        public string align;
+        public string placeHolder;
+        public int characterLimit;
+        public Color placeHolderColor;
+    }
 
-	public enum ReturnKeyType
-	{
-		Default,
-		Next,
-		Done,
-		Send,
-		Go
-	}
+    public enum ReturnKeyType
+    {
+        Default,
+        Next,
+        Done,
+        Send,
+        Go
+    }
 
-	public float updateDeltaTime = 0.25f;
-	public bool withDoneButton = true;
-	public bool useInputFieldFont;
-	public bool clearFocusOnReturnPressed;
-	public ReturnKeyType returnKeyType;
+    public float updateDeltaTime = 0.25f;
+    public bool withDoneButton = true;
+    public bool useInputFieldFont;
+    public bool clearFocusOnReturnPressed;
+    public ReturnKeyType returnKeyType;
 
-	public event Action returnPressed;
-	public UnityEngine.Events.UnityEvent onReturnPressed;
-	public UnityEngine.Events.UnityEvent OnBeginEditing;
+    public event Action returnPressed;
+    public UnityEvent onReturnPressed; // only invoke on iOS & Android
+    public UnityEvent OnBeginEditing; // only invoke on iOS & Android
 
-	private bool _hasNativeEditCreated = false;
+    private bool _hasNativeEditCreated;
 
-	private InputField _inputField;
-	private Text _textComponent;
-	private bool _focusOnCreate;
-	private bool _visibleOnCreate = true;
-	private float _fakeTimer = 0f;
+    private Text _textComponent;
+    private bool _focusOnCreate;
+    private bool _visibleOnCreate = true;
+    private float _fakeTimer = 0f;
 
-	private const string MSG_CREATE = "CreateEdit";
-	private const string MSG_REMOVE = "RemoveEdit";
-	private const string MSG_SET_TEXT = "SetText";
-	private const string MSG_SET_RECT = "SetRect";
-	private const string MSG_SET_TEXTSIZE = "SetTextSize";
-	private const string MSG_SET_FOCUS = "SetFocus";
-	private const string MSG_SET_VISIBLE = "SetVisible";
-	private const string MSG_TEXT_CHANGE = "TextChange";
-	private const string MSG_TEXT_BEGIN_EDIT = "TextBeginEdit";
-	private const string MSG_TEXT_END_EDIT = "TextEndEdit";
-	// to fix bug Some keys 'back' & 'enter' are eaten by unity and never arrive at plugin
-	private const string MSG_ANDROID_KEY_DOWN = "AndroidKeyDown";
-	private const string MSG_RETURN_PRESSED = "ReturnPressed";
-	private const string MSG_GET_TEXT = "GetText";
+    private const string MSG_CREATE = "CreateEdit";
+    private const string MSG_REMOVE = "RemoveEdit";
+    private const string MSG_SET_TEXT = "SetText";
+    private const string MSG_SET_RECT = "SetRect";
+    private const string MSG_SET_TEXTSIZE = "SetTextSize";
+    private const string MSG_SET_FOCUS = "SetFocus";
+    private const string MSG_SET_VISIBLE = "SetVisible";
+    private const string MSG_TEXT_CHANGE = "TextChange";
+    private const string MSG_TEXT_BEGIN_EDIT = "TextBeginEdit";
 
-	public InputField inputField
-	{
-		get { return _inputField; }
-	}
+    private const string MSG_TEXT_END_EDIT = "TextEndEdit";
 
-	public bool visible { get; private set; }
+    // to fix bug Some keys 'back' & 'enter' are eaten by unity and never arrive at plugin
+    private const string MSG_ANDROID_KEY_DOWN = "AndroidKeyDown";
+    private const string MSG_RETURN_PRESSED = "ReturnPressed";
+    private const string MSG_GET_TEXT = "GetText";
 
-	public string text
-	{
-		get { return _inputField.text; }
-		set
-		{
-			_inputField.text = value;
-			if(_hasNativeEditCreated)
-				SetTextNative(value);
-		}
-	}
+    public InputField inputField { get; private set; }
 
-	public static Rect GetScreenRectFromRectTransform(RectTransform rectTransform)
-	{
-		Vector3[] corners = new Vector3[4];
+    public bool visible { get; private set; }
 
-		rectTransform.GetWorldCorners(corners);
+    public string text
+    {
+        get { return inputField.text; }
+        set
+        {
+            inputField.text = value;
+            if(_hasNativeEditCreated)
+                SetTextNative(value);
+        }
+    }
 
-		float xMin = float.PositiveInfinity;
-		float xMax = float.NegativeInfinity;
-		float yMin = float.PositiveInfinity;
-		float yMax = float.NegativeInfinity;
+    public static Rect GetScreenRectFromRectTransform(RectTransform rectTransform)
+    {
+        var corners = new Vector3[4];
 
-		for (int i = 0; i < 4; i++)
-		{
-			// For Canvas mode Screen Space - Overlay there is no Camera; best solution I've found
-			// is to use RectTransformUtility.WorldToScreenPoint) with a null camera.
-			Vector3 screenCoord = RectTransformUtility.WorldToScreenPoint(null, corners[i]);
+        rectTransform.GetWorldCorners(corners);
 
-			if (screenCoord.x < xMin)
-				xMin = screenCoord.x;
-			if (screenCoord.x > xMax)
-				xMax = screenCoord.x;
-			if (screenCoord.y < yMin)
-				yMin = screenCoord.y;
-			if (screenCoord.y > yMax)
-				yMax = screenCoord.y;
-		}
-		Rect result = new Rect(xMin, Screen.height - yMax, xMax - xMin, yMax - yMin);
-		return result;
-	}
+        var xMin = float.PositiveInfinity;
+        var xMax = float.NegativeInfinity;
+        var yMin = float.PositiveInfinity;
+        var yMax = float.NegativeInfinity;
 
-	private EditBoxConfig mConfig;
+        for(var i = 0; i < 4; i++)
+        {
+            // For Canvas mode Screen Space - Overlay there is no Camera; best solution I've found
+            // is to use RectTransformUtility.WorldToScreenPoint) with a null camera.
+            Vector3 screenCoord = RectTransformUtility.WorldToScreenPoint(null, corners[i]);
 
-	private void Awake()
-	{
-		_inputField = this.GetComponent<InputField>();
-		if (_inputField == null)
-		{
-			Debug.LogErrorFormat("No InputField found {0} NativeEditBox Error", this.name);
-			throw new MissingComponentException();
-		}
+            if(screenCoord.x < xMin)
+                xMin = screenCoord.x;
+            if(screenCoord.x > xMax)
+                xMax = screenCoord.x;
+            if(screenCoord.y < yMin)
+                yMin = screenCoord.y;
+            if(screenCoord.y > yMax)
+                yMax = screenCoord.y;
+        }
 
-		_textComponent = _inputField.textComponent;
-	}
+        var result = new Rect(xMin, Screen.height - yMax, xMax - xMin, yMax - yMin);
+        return result;
+    }
 
-	// Use this for initialization
-	protected override void Start()
-	{
-		base.Start();
+    private EditBoxConfig mConfig;
 
-		// Wait until the end of frame before initializing to ensure that Unity UI layout has been built. We used to
-		// initialize at Start, but that resulted in an invalid RectTransform position and size on the InputField if it
-		// was instantiated at runtime instead of being built in to the scene.
-		StartCoroutine(InitializeOnNextFrame());
-	}
+    private void Awake()
+    {
+        inputField = GetComponent<InputField>();
+        if(inputField == null)
+        {
+            Debug.LogErrorFormat("No InputField found {0} NativeEditBox Error", name);
+            throw new MissingComponentException();
+        }
 
-	private void OnEnable()
-	{
-		if (_hasNativeEditCreated)
-			this.SetVisible(true);
-	}
+        _textComponent = inputField.textComponent;
+    }
 
-	private void OnDisable()
-	{
-		if (_hasNativeEditCreated)
-			this.SetVisible(false);
-	}
+    // Use this for initialization
+    protected override void Start()
+    {
+        base.Start();
 
-	protected override void OnDestroy()
-	{
-		if (!_hasNativeEditCreated)
-			return;
+        // Wait until the end of frame before initializing to ensure that Unity UI layout has been built. We used to
+        // initialize at Start, but that resulted in an invalid RectTransform position and size on the InputField if it
+        // was instantiated at runtime instead of being built in to the scene.
+        StartCoroutine(InitializeOnNextFrame());
+    }
 
-		RemoveNative();
-		base.OnDestroy();
-	}
+    private void OnEnable()
+    {
+        if(_hasNativeEditCreated)
+            SetVisible(true);
+    }
 
-	private void OnApplicationPause(bool pause)
-	{
-		if (!_hasNativeEditCreated)
-			return;
+    private void OnDisable()
+    {
+        if(_hasNativeEditCreated)
+            SetVisible(false);
+    }
 
-		this.SetVisible(!pause);
-	}
+    protected override void OnDestroy()
+    {
+        if(!_hasNativeEditCreated)
+            return;
 
-	private IEnumerator InitializeOnNextFrame()
-	{
-		yield return null;
+        RemoveNative();
+        base.OnDestroy();
+    }
 
-		this.PrepareNativeEdit();
+    private void OnApplicationPause(bool pause)
+    {
+        if(!_hasNativeEditCreated)
+            return;
+
+        SetVisible(!pause);
+    }
+
+    private IEnumerator InitializeOnNextFrame()
+    {
+        yield return null;
+
+        PrepareNativeEdit();
 #if (UNITY_IPHONE || UNITY_ANDROID) && !UNITY_EDITOR
 		this.CreateNativeEdit();
 		this.SetTextNative(this._inputField.text);
@@ -210,10 +210,10 @@ public class NativeEditBox : PluginMsgReceiver
 		_textComponent.enabled = false;
 		_inputField.enabled = false;
 #endif
-	}
+    }
 
-	private void Update()
-	{
+    private void Update()
+    {
 #if UNITY_ANDROID && !UNITY_EDITOR
 		this.UpdateForceKeyeventForAndroid();
 
@@ -225,173 +225,180 @@ public class NativeEditBox : PluginMsgReceiver
 			_fakeTimer = 0f;
 		}
 #endif
-	}
+    }
 
-	private void PrepareNativeEdit()
-	{
-		var placeHolder = _inputField.placeholder.GetComponent<Text>();
+    private void PrepareNativeEdit()
+    {
+        var placeHolder = inputField.placeholder.GetComponent<Text>();
 
-		if (useInputFieldFont)
-			mConfig.font = _textComponent.font.fontNames.Length > 0 ? _textComponent.font.fontNames[0] : "Arial";
+        if(useInputFieldFont)
+        {
+            var font = _textComponent.font;
+            mConfig.font = font.fontNames.Length > 0 ? font.fontNames[0] : "Arial";
+        }
 
-		mConfig.placeHolder = placeHolder.text;
-		mConfig.placeHolderColor = placeHolder.color;
-		mConfig.characterLimit = _inputField.characterLimit;
+        mConfig.placeHolder = placeHolder.text;
+        mConfig.placeHolderColor = placeHolder.color;
+        mConfig.characterLimit = inputField.characterLimit;
 
-		Rect rectScreen = GetScreenRectFromRectTransform(this._textComponent.rectTransform);
-		float fHeightRatio = rectScreen.height/_textComponent.rectTransform.rect.height;
-		mConfig.fontSize = ((float) _textComponent.fontSize)*fHeightRatio;
+        var rectScreen = GetScreenRectFromRectTransform(_textComponent.rectTransform);
+        var fHeightRatio = rectScreen.height / _textComponent.rectTransform.rect.height;
+        mConfig.fontSize = _textComponent.fontSize * fHeightRatio;
 
-		mConfig.textColor = _textComponent.color;
-		mConfig.align = _textComponent.alignment.ToString();
-		mConfig.contentType = _inputField.contentType.ToString();
-		mConfig.backColor = new Color(1.0f, 1.0f, 1.0f, 0.0f);
-		mConfig.multiline = _inputField.lineType != InputField.LineType.SingleLine;
-	}
+        mConfig.textColor = _textComponent.color;
+        mConfig.align = _textComponent.alignment.ToString();
+        mConfig.contentType = inputField.contentType.ToString();
+        mConfig.backColor = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+        mConfig.multiline = inputField.lineType != InputField.LineType.SingleLine;
+    }
 
-	public override void OnPluginMsgDirect(JsonObject jsonMsg)
-	{
-		PluginMsgHandler.GetInstanceForReceiver(this).StartCoroutine(PluginsMessageRoutine(jsonMsg));
-	}
+    public override void OnPluginMsgDirect(JsonObject jsonMsg)
+    {
+        PluginMsgHandler.GetInstanceForReceiver(this).StartCoroutine(PluginsMessageRoutine(jsonMsg));
+    }
 
-	private IEnumerator PluginsMessageRoutine(JsonObject jsonMsg)
-	{
-		// this is to avoid a deadlock for more info when trying to get data from two separate native plugins and handling them in Unity
-		yield return null;
+    private IEnumerator PluginsMessageRoutine(JsonObject jsonMsg)
+    {
+        // this is to avoid a deadlock for more info when trying to get data from two separate native plugins and handling them in Unity
+        yield return null;
 
-		string msg = jsonMsg.GetString("msg");
-		if (msg.Equals(MSG_TEXT_BEGIN_EDIT))
-		{
-			if (this.OnBeginEditing != null)
-				this.OnBeginEditing.Invoke();
-		}
-		else if (msg.Equals(MSG_TEXT_CHANGE) || msg.Equals(MSG_TEXT_END_EDIT))
-		{
-			this._inputField.text = jsonMsg.GetString("text");
-		}
-		else if (msg.Equals(MSG_RETURN_PRESSED))
-		{
-			if (returnPressed != null)
-				returnPressed();
-			if (onReturnPressed != null)
-				onReturnPressed.Invoke();
-			if (clearFocusOnReturnPressed)
-				SetFocus(false);
-		}
-	}
+        var msg = jsonMsg.GetString("msg");
+        if(msg.Equals(MSG_TEXT_BEGIN_EDIT))
+        {
+            OnBeginEditing?.Invoke();
+        }
+        else if(msg.Equals(MSG_TEXT_CHANGE) || msg.Equals(MSG_TEXT_END_EDIT))
+        {
+            inputField.text = jsonMsg.GetString("text");
+        }
+        else if(msg.Equals(MSG_RETURN_PRESSED))
+        {
+            returnPressed?.Invoke();
+            onReturnPressed?.Invoke();
+            if(clearFocusOnReturnPressed)
+                SetFocus(false);
+        }
+    }
 
-	private bool CheckErrorJsonRet(JsonObject jsonRet)
-	{
-		bool bError = jsonRet.GetBool("bError");
-		string strError = jsonRet.GetString("strError");
-		if (bError)
-		{
-			Debug.LogError(string.Format("NativeEditbox error {0}", strError));
-		}
-		return bError;
-	}
+    private bool CheckErrorJsonRet(JsonObject jsonRet)
+    {
+        var bError = jsonRet.GetBool("bError");
+        var strError = jsonRet.GetString("strError");
+        if(bError) Debug.LogError($"NativeEditbox error {strError}");
+        return bError;
+    }
 
-	private void CreateNativeEdit()
-	{
-		Rect rectScreen = GetScreenRectFromRectTransform(this._textComponent.rectTransform);
+    private void CreateNativeEdit()
+    {
+        var rectScreen = GetScreenRectFromRectTransform(_textComponent.rectTransform);
 
-		var jsonMsg = new JsonObject();
-		jsonMsg["msg"] = MSG_CREATE;
-		jsonMsg["x"] = rectScreen.x/Screen.width;
-		jsonMsg["y"] = rectScreen.y/Screen.height;
-		jsonMsg["width"] = rectScreen.width/Screen.width;
-		jsonMsg["height"] = rectScreen.height/Screen.height;
-		jsonMsg["characterLimit"] = mConfig.characterLimit;
-		jsonMsg["textColor_r"] = mConfig.textColor.r;
-		jsonMsg["textColor_g"] = mConfig.textColor.g;
-		jsonMsg["textColor_b"] = mConfig.textColor.b;
-		jsonMsg["textColor_a"] = mConfig.textColor.a;
-		jsonMsg["backColor_r"] = mConfig.backColor.r;
-		jsonMsg["backColor_g"] = mConfig.backColor.g;
-		jsonMsg["backColor_b"] = mConfig.backColor.b;
-		jsonMsg["backColor_a"] = mConfig.backColor.a;
-		jsonMsg["font"] = mConfig.font;
-		jsonMsg["fontSize"] = mConfig.fontSize;
-		jsonMsg["contentType"] = mConfig.contentType;
-		jsonMsg["align"] = mConfig.align;
-		jsonMsg["withDoneButton"] = this.withDoneButton;
-		jsonMsg["placeHolder"] = mConfig.placeHolder;
-		jsonMsg["placeHolderColor_r"] = mConfig.placeHolderColor.r;
-		jsonMsg["placeHolderColor_g"] = mConfig.placeHolderColor.g;
-		jsonMsg["placeHolderColor_b"] = mConfig.placeHolderColor.b;
-		jsonMsg["placeHolderColor_a"] = mConfig.placeHolderColor.a;
-		jsonMsg["multiline"] = mConfig.multiline;
-		switch (returnKeyType)
-		{
-			case ReturnKeyType.Next:
-				jsonMsg["return_key_type"] = "Next";
-				break;
-			case ReturnKeyType.Done:
-				jsonMsg["return_key_type"] = "Done";
-				break;
-			case ReturnKeyType.Send:
-				jsonMsg["return_key_type"] = "Send";
-				break;
-			case ReturnKeyType.Go:
-				jsonMsg["return_key_type"] = "Go";
-				break;
-			default:
-				jsonMsg["return_key_type"] = "Default";
-				break;
-		}
+        var jsonMsg = new JsonObject
+        {
+            ["msg"] = MSG_CREATE,
+            ["x"] = rectScreen.x / Screen.width,
+            ["y"] = rectScreen.y / Screen.height,
+            ["width"] = rectScreen.width / Screen.width,
+            ["height"] = rectScreen.height / Screen.height,
+            ["characterLimit"] = mConfig.characterLimit,
+            ["textColor_r"] = mConfig.textColor.r,
+            ["textColor_g"] = mConfig.textColor.g,
+            ["textColor_b"] = mConfig.textColor.b,
+            ["textColor_a"] = mConfig.textColor.a,
+            ["backColor_r"] = mConfig.backColor.r,
+            ["backColor_g"] = mConfig.backColor.g,
+            ["backColor_b"] = mConfig.backColor.b,
+            ["backColor_a"] = mConfig.backColor.a,
+            ["font"] = mConfig.font,
+            ["fontSize"] = mConfig.fontSize,
+            ["contentType"] = mConfig.contentType,
+            ["align"] = mConfig.align,
+            ["withDoneButton"] = withDoneButton,
+            ["placeHolder"] = mConfig.placeHolder,
+            ["placeHolderColor_r"] = mConfig.placeHolderColor.r,
+            ["placeHolderColor_g"] = mConfig.placeHolderColor.g,
+            ["placeHolderColor_b"] = mConfig.placeHolderColor.b,
+            ["placeHolderColor_a"] = mConfig.placeHolderColor.a,
+            ["multiline"] = mConfig.multiline
+        };
+        switch(returnKeyType)
+        {
+            case ReturnKeyType.Next:
+                jsonMsg["return_key_type"] = "Next";
+                break;
+            case ReturnKeyType.Done:
+                jsonMsg["return_key_type"] = "Done";
+                break;
+            case ReturnKeyType.Send:
+                jsonMsg["return_key_type"] = "Send";
+                break;
+            case ReturnKeyType.Go:
+                jsonMsg["return_key_type"] = "Go";
+                break;
+            default:
+                jsonMsg["return_key_type"] = "Default";
+                break;
+        }
 
-		JsonObject jsonRet = this.SendPluginMsg(jsonMsg);
-		_hasNativeEditCreated = !this.CheckErrorJsonRet(jsonRet);
+        var jsonRet = SendPluginMsg(jsonMsg);
+        _hasNativeEditCreated = !CheckErrorJsonRet(jsonRet);
 
-		this.visible = _visibleOnCreate;
-		if (!_visibleOnCreate)
-			SetVisible(false);
+        visible = _visibleOnCreate;
+        if(!_visibleOnCreate)
+            SetVisible(false);
 
-		if (_focusOnCreate)
-			SetFocus(true);
-	}
+        if(_focusOnCreate)
+            SetFocus(true);
+    }
 
-	private void SetTextNative(string newText)
-	{		
-		var jsonMsg = new JsonObject();
-		jsonMsg["msg"] = MSG_SET_TEXT;
-		jsonMsg["text"] = newText ?? string.Empty;
-		this.SendPluginMsg(jsonMsg);
-	}
+    private void SetTextNative(string newText)
+    {
+        var jsonMsg = new JsonObject
+        {
+            ["msg"] = MSG_SET_TEXT,
+            ["text"] = newText ?? string.Empty
+        };
+        SendPluginMsg(jsonMsg);
+    }
 
-	private void RemoveNative()
-	{   
-		var jsonMsg = new JsonObject();
-		jsonMsg["msg"] = MSG_REMOVE;
-		this.SendPluginMsg(jsonMsg);
-	}
+    private void RemoveNative()
+    {
+        var jsonMsg = new JsonObject
+        {
+            ["msg"] = MSG_REMOVE
+        };
+        SendPluginMsg(jsonMsg);
+    }
 
-	public void SetRectNative(RectTransform rectTrans)
-	{
-		var rectScreen = GetScreenRectFromRectTransform(rectTrans);
+    public void SetRectNative(RectTransform rectTrans)
+    {
+        var rectScreen = GetScreenRectFromRectTransform(rectTrans);
 
-		var jsonMsg = new JsonObject();
-		jsonMsg["msg"] = MSG_SET_RECT;
-		jsonMsg["x"] = rectScreen.x/Screen.width;
-		jsonMsg["y"] = rectScreen.y/Screen.height;
-		jsonMsg["width"] = rectScreen.width/Screen.width;
-		jsonMsg["height"] = rectScreen.height/Screen.height;
-		this.SendPluginMsg(jsonMsg);
+        var jsonMsg = new JsonObject
+        {
+            ["msg"] = MSG_SET_RECT,
+            ["x"] = rectScreen.x / Screen.width,
+            ["y"] = rectScreen.y / Screen.height,
+            ["width"] = rectScreen.width / Screen.width,
+            ["height"] = rectScreen.height / Screen.height
+        };
+        SendPluginMsg(jsonMsg);
 
-		var fontRectHeightRatio = rectScreen.height / this._textComponent.rectTransform.rect.height;
-		var fontSize = this._textComponent.fontSize * fontRectHeightRatio;
-		if (Math.Abs(this.mConfig.fontSize - fontSize) > 0.1f)
-		{
-			var sizeMsg = new JsonObject();
-			sizeMsg["msg"] = MSG_SET_TEXTSIZE;
-			sizeMsg["fontSize"] = fontSize;
-			this.SendPluginMsg(sizeMsg);
-			this.mConfig.fontSize = fontSize;
-		}
-	}
+        var fontRectHeightRatio = rectScreen.height / _textComponent.rectTransform.rect.height;
+        var fontSize = _textComponent.fontSize * fontRectHeightRatio;
+        if(Math.Abs(mConfig.fontSize - fontSize) > 0.1f)
+        {
+            var sizeMsg = new JsonObject
+            {
+                ["msg"] = MSG_SET_TEXTSIZE,
+                ["fontSize"] = fontSize
+            };
+            SendPluginMsg(sizeMsg);
+            mConfig.fontSize = fontSize;
+        }
+    }
 
-	public void SetFocus(bool bFocus)
-	{
+    public void SetFocus(bool bFocus)
+    {
 #if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
 		if (!_hasNativeEditCreated)
 		{
@@ -399,45 +406,53 @@ public class NativeEditBox : PluginMsgReceiver
 			return;
 		}
 
-		var jsonMsg = new JsonObject();
-		jsonMsg["msg"] = MSG_SET_FOCUS;
-		jsonMsg["isFocus"] = bFocus;
+		var jsonMsg = new JsonObject
+        {
+		    ["msg"] = MSG_SET_FOCUS,
+		    ["isFocus"] = bFocus
+        }
 		this.SendPluginMsg(jsonMsg);
 #else
-		if (gameObject.activeInHierarchy)
-		{
-			if (bFocus)
-				_inputField.ActivateInputField();
-			else
-				_inputField.DeactivateInputField();
-		}
-		else
-			_focusOnCreate = bFocus;
+        if(gameObject.activeInHierarchy)
+        {
+            if(bFocus)
+                inputField.ActivateInputField();
+            else
+                inputField.DeactivateInputField();
+        }
+        else
+        {
+            _focusOnCreate = bFocus;
+        }
 #endif
-	}
+    }
 
-	public void SetVisible(bool bVisible)
-	{
-		if (!_hasNativeEditCreated)
-		{
-			_visibleOnCreate = bVisible;
-			return;
-		}
+    public void SetVisible(bool bVisible)
+    {
+        if(!_hasNativeEditCreated)
+        {
+            _visibleOnCreate = bVisible;
+            return;
+        }
 
-		var jsonMsg = new JsonObject();
-		jsonMsg["msg"] = MSG_SET_VISIBLE;
-		jsonMsg["isVisible"] = bVisible;
-		this.SendPluginMsg(jsonMsg);
+        var jsonMsg = new JsonObject
+        {
+            ["msg"] = MSG_SET_VISIBLE,
+            ["isVisible"] = bVisible
+        };
+        SendPluginMsg(jsonMsg);
 
-		this.visible = bVisible;
-	}
+        visible = bVisible;
+    }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 	private void ForceSendKeydown_Android(string key)
 	{
-		var jsonMsg = new JsonObject();
-		jsonMsg["msg"] = MSG_ANDROID_KEY_DOWN;
-		jsonMsg["key"] = key;
+		var jsonMsg = new JsonObject
+        {
+		    ["msg"] = MSG_ANDROID_KEY_DOWN,
+		    ["key"] = key
+        }
 		this.SendPluginMsg(jsonMsg);
 	}
 

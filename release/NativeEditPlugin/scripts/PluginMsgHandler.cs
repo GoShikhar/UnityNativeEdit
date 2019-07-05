@@ -29,108 +29,103 @@ using System;
 using System.IO;
 using AOT;
 
-public class PluginMsgHandler : MonoBehaviour 
+public class PluginMsgHandler : MonoBehaviour
 {
-	private static PluginMsgHandler _instance = null;
+    private static PluginMsgHandler _instance;
 
-	private int	_curReceiverIndex = 0;
-	private Dictionary<int, PluginMsgReceiver> _receiverDict;
+    private int _curReceiverIndex;
+    private Dictionary<int, PluginMsgReceiver> _receiverDict;
 
-	private const string DEFAULT_NAME = "NativeEditPluginHandler";
+    private const string DEFAULT_NAME = "NativeEditPluginHandler";
 
-	private bool isEditor
-	{
-		get 
-		{
-			#if UNITY_EDITOR
-			return true;
-			#else
+    private bool isEditor
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return true;
+#else
 			return false;
-			#endif
-		}
-	}
+#endif
+        }
+    }
 
-	private bool isStandalone
-	{
-		get 
-		{			
-			#if UNITY_STANDALONE
-			return true;
-			#else
+    private bool isStandalone
+    {
+        get
+        {
+#if UNITY_STANDALONE
+            return true;
+#else
 			return false;
-			#endif
-		}
-	}
+#endif
+        }
+    }
 
-	public static PluginMsgHandler GetInstanceForReceiver(PluginMsgReceiver receiver)
-	{
-		if (_instance == null) 
-		{
-			GameObject handlerObject = new GameObject(DEFAULT_NAME);
-			_instance = handlerObject.AddComponent<PluginMsgHandler>();
-		}
-		return _instance;
-	}
+    public static PluginMsgHandler GetInstanceForReceiver(PluginMsgReceiver receiver)
+    {
+        if(_instance == null)
+        {
+            var handlerObject = new GameObject(DEFAULT_NAME);
+            _instance = handlerObject.AddComponent<PluginMsgHandler>();
+        }
 
-	void Awake()
-	{
-		this._receiverDict = new Dictionary<int, PluginMsgReceiver>();
-		this.InitializeHandler();
-	}
+        return _instance;
+    }
 
-	void OnDestroy()
-	{
-		this.FinalizeHandler();
-		_instance = null;
-	}
+    private void Awake()
+    {
+        _receiverDict = new Dictionary<int, PluginMsgReceiver>();
+        InitializeHandler();
+    }
 
-	public int RegisterAndGetReceiverId(PluginMsgReceiver receiver)
-	{
-		if (receiver == null)
-			throw new ArgumentNullException("MonoNativeEditBox: Receiver cannot be null while RegisterAndGetReceiverId!");
+    private void OnDestroy()
+    {
+        FinalizeHandler();
+        _instance = null;
+    }
 
-		int index = _curReceiverIndex;
-		_curReceiverIndex++;
+    public int RegisterAndGetReceiverId(PluginMsgReceiver receiver)
+    {
+        if(receiver == null)
+            throw new ArgumentNullException(
+                "MonoNativeEditBox: Receiver cannot be null while RegisterAndGetReceiverId!");
 
-		_receiverDict[index] = receiver;
-		return index;
-	}
+        var index = _curReceiverIndex;
+        _curReceiverIndex++;
 
-	public void RemoveReceiver(int nReceiverId)
-	{
-		_receiverDict.Remove(nReceiverId);
-		if (_receiverDict.Count == 0)
-		{
-			Destroy(_instance.gameObject);
-		}
-	}
-	
-	public PluginMsgReceiver GetReceiver(int nSenderId)
-	{
-		return _receiverDict[nSenderId];
-	}
-	
-	private void OnMsgFromPlugin(string jsonPluginMsg)
-	{
-		if (jsonPluginMsg == null) return;
+        _receiverDict[index] = receiver;
+        return index;
+    }
 
-		JsonObject jsonMsg = new JsonObject(jsonPluginMsg);
+    public void RemoveReceiver(int nReceiverId)
+    {
+        _receiverDict.Remove(nReceiverId);
+        if(_receiverDict.Count == 0) Destroy(_instance.gameObject);
+    }
 
-		string msg = jsonMsg.GetString("msg");
+    public PluginMsgReceiver GetReceiver(int nSenderId)
+    {
+        return _receiverDict[nSenderId];
+    }
 
-		int nSenderId = jsonMsg.GetInt("senderId");
+    private void OnMsgFromPlugin(string jsonPluginMsg)
+    {
+        if(jsonPluginMsg == null) return;
+        var jsonMsg = new JsonObject(jsonPluginMsg);
+        var nSenderId = jsonMsg.GetInt("senderId");
 
-		// In some cases the receiver might be already removed, for example if a button is pressed
-		// that will destroy the receiver while the input field is focused an end editing message
-		// will be sent from the plugin after the receiver is already destroyed on Unity side.
-		if (_receiverDict.ContainsKey(nSenderId))
-		{
-			PluginMsgReceiver receiver = GetReceiver(nSenderId);
-			receiver.OnPluginMsgDirect(jsonMsg);
-		}
-	}
-	
-	#if UNITY_IPHONE  
+        // In some cases the receiver might be already removed, for example if a button is pressed
+        // that will destroy the receiver while the input field is focused an end editing message
+        // will be sent from the plugin after the receiver is already destroyed on Unity side.
+        if(_receiverDict.ContainsKey(nSenderId))
+        {
+            var receiver = GetReceiver(nSenderId);
+            receiver.OnPluginMsgDirect(jsonMsg);
+        }
+    }
+
+#if UNITY_IPHONE
 	[DllImport ("__Internal")]
 	private static extern void _iOS_InitPluginMsgHandler(string unityName);
 	[DllImport ("__Internal")]
@@ -151,8 +146,7 @@ public class PluginMsgHandler : MonoBehaviour
 		
 	}
 
-	#elif UNITY_ANDROID 
-
+#elif UNITY_ANDROID
 	private static AndroidJavaClass smAndroid;
 	public void InitializeHandler()
 	{	
@@ -171,22 +165,23 @@ public class PluginMsgHandler : MonoBehaviour
 			smAndroid.CallStatic("ClosePluginMsgHandler");
 	}
 
-	#else
-	public void InitializeHandler()
-	{
-	}
-	public void FinalizeHandler()
-	{
-	}
+#else
+    public void InitializeHandler()
+    {
+    }
 
-	#endif
+    public void FinalizeHandler()
+    {
+    }
 
-	
-	public JsonObject SendMsgToPlugin(int nSenderId, JsonObject jsonMsg)
-	{	
-		#if UNITY_EDITOR || UNITY_STANDALONE
-			return new JsonObject();
-		#else
+#endif
+
+
+    public JsonObject SendMsgToPlugin(int nSenderId, JsonObject jsonMsg)
+    {
+#if UNITY_EDITOR || UNITY_STANDALONE
+        return new JsonObject();
+#else
 			jsonMsg["senderId"] = nSenderId;
 			string strJson = jsonMsg.Serialize();
 
@@ -199,6 +194,6 @@ public class PluginMsgHandler : MonoBehaviour
 
 			JsonObject jsonRet = new JsonObject(strRet);
 			return jsonRet;
-		#endif
-	}
+#endif
+    }
 }

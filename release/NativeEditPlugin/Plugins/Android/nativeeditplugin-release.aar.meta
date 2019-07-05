@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: c17de6c72041dc74ea5a3e1544358419
+guid: 0cba3a7ec52957948905b705a410cde1
 timeCreated: 1562335736
 licenseType: Free
 PluginImporter:
@@ -11,9 +11,14 @@ PluginImporter:
   isOverridable: 0
   platformData:
   - first:
-      Any: 
+      Android: Android
     second:
       enabled: 1
+      settings: {}
+  - first:
+      Any: 
+    second:
+      enabled: 0
       settings: {}
   - first:
       Editor: Editor

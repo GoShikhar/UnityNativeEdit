@@ -1,34 +1,35 @@
-﻿using UnityEngine;
-using UnityEngine.EventSystems;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
-public class demo : MonoBehaviour {
+public class Demo : MonoBehaviour
+{
+    private Text txt;
 
-	public NativeEditBox testNativeEdit;
-	public Canvas mainCanvas;
-	private RectTransform rectTrans;
+    private void Start()
+    {
+        txt = GetComponent<Text>();
+    }
 
-	// Use this for initialization
-	void Start () {
-		rectTrans = testNativeEdit.transform.Find("Text").GetComponent<RectTransform>();
-	}
+    public void OnEditValueChanged(string str)
+    {
+        txt.text = $"val changed: {str}";
+    }
 
-	public void OnEditValueChanged(string str)
-	{
-		Text txt = this.GetComponent<Text>();
-		txt.text = string.Format("val changed {0}", str);
-	}
+    public void OnEditEnded(string str)
+    {
+        txt.text = $"edit ended: {str}";
+    }
 
-	public void OnEditEnded(string str)
-	{
-		Text txt = this.GetComponent<Text>();
-		txt.text = string.Format("edit ended {0}", str);
-	}
+    public void OnReturnPressed(NativeEditBox editBox)
+    {
+        //hide keyboard
+        editBox.SetFocus(false);
+        txt.text = "return pressed";
+    }
 
-	public void OnReturnPressed(NativeEditBox editBox)
-	{
-		//hide keyboard
-		editBox.SetFocus(false);
-	}
+    public void OnBeginEditing(NativeEditBox editBox)
+    {
+        txt.text = "begin editing";
+    }
 }
