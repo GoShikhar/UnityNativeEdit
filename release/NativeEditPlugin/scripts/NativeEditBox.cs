@@ -203,25 +203,25 @@ public class NativeEditBox : PluginMsgReceiver
 
         PrepareNativeEdit();
 #if (UNITY_IPHONE || UNITY_ANDROID) && !UNITY_EDITOR
-		this.CreateNativeEdit();
-		this.SetTextNative(this._inputField.text);
+		CreateNativeEdit();
+		SetTextNative(inputField.text);
 
-		_inputField.placeholder.gameObject.SetActive(false);
+		inputField.placeholder.gameObject.SetActive(false);
 		_textComponent.enabled = false;
-		_inputField.enabled = false;
+		inputField.enabled = false;
 #endif
     }
 
     private void Update()
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
-		this.UpdateForceKeyeventForAndroid();
+		UpdateForceKeyeventForAndroid();
 
 		//Plugin has to update rect continually otherwise we cannot see characters inputted just now 
 		_fakeTimer += Time.deltaTime;
-		if (_fakeTimer >= updateDeltaTime && this._inputField != null && _hasNativeEditCreated && this.visible)
+		if (_fakeTimer >= updateDeltaTime && inputField != null && _hasNativeEditCreated && visible)
 		{
-			SetRectNative(this._textComponent.rectTransform);
+			SetRectNative(_textComponent.rectTransform);
 			_fakeTimer = 0f;
 		}
 #endif
@@ -410,8 +410,8 @@ public class NativeEditBox : PluginMsgReceiver
         {
 		    ["msg"] = MSG_SET_FOCUS,
 		    ["isFocus"] = bFocus
-        }
-		this.SendPluginMsg(jsonMsg);
+        };
+		SendPluginMsg(jsonMsg);
 #else
         if(gameObject.activeInHierarchy)
         {
@@ -452,8 +452,8 @@ public class NativeEditBox : PluginMsgReceiver
         {
 		    ["msg"] = MSG_ANDROID_KEY_DOWN,
 		    ["key"] = key
-        }
-		this.SendPluginMsg(jsonMsg);
+        };
+		SendPluginMsg(jsonMsg);
 	}
 
 	private void UpdateForceKeyeventForAndroid()
@@ -462,7 +462,7 @@ public class NativeEditBox : PluginMsgReceiver
 		{
 			if (Input.GetKeyDown(KeyCode.Backspace))
 			{
-				this.ForceSendKeydown_Android("backspace");
+				ForceSendKeydown_Android("backspace");
 			}
 			else
 			{
@@ -470,11 +470,11 @@ public class NativeEditBox : PluginMsgReceiver
 				{
 					if (c == '\n')
 					{
-						this.ForceSendKeydown_Android("enter");
+						ForceSendKeydown_Android("enter");
 					}
 					else
 					{
-						this.ForceSendKeydown_Android(Input.inputString);
+						ForceSendKeydown_Android(Input.inputString);
 					}
 				}
 			}
