@@ -63,11 +63,11 @@ public class NativeEditBox : PluginMsgReceiver
         Go
     }
 
-    public float updateDeltaTime = 0.25f;
-    public bool withDoneButton = true;
+    public float androidUpdateDeltaTime = 0.15f;
+    public bool iOSWithDoneButton = true;
     public bool useInputFieldFont;
-    public bool clearFocusOnReturnPressed;
-    public ReturnKeyType returnKeyType;
+    public bool clearFocusOnReturnPressed = true;
+    public ReturnKeyType singleLineReturnKeyType;
 
     public event Action returnPressed;
     public UnityEvent onReturnPressed; // only invoke on iOS & Android
@@ -125,8 +125,9 @@ public class NativeEditBox : PluginMsgReceiver
 
         for(var i = 0; i < 4; i++)
         {
-            // For Canvas mode Screen Space - Overlay there is no Camera; best solution I've found
-            // is to use RectTransformUtility.WorldToScreenPoint) with a null camera.
+            // For Canvas mode Screen Space - Overlay there is no Camera;
+            // the best solution I've found is to use RectTransformUtility.WorldToScreenPoint with a null camera.
+            // When screen match mode of Canvas Scaler is set to Match Width Or Height, be sure that it matches height completely or there will be mistakes.
             Vector3 screenCoord = RectTransformUtility.WorldToScreenPoint(null, corners[i]);
 
             if(screenCoord.x < xMin)
@@ -219,7 +220,7 @@ public class NativeEditBox : PluginMsgReceiver
 
 		//Plugin has to update rect continually otherwise we cannot see characters inputted just now 
 		_fakeTimer += Time.deltaTime;
-		if (_fakeTimer >= updateDeltaTime && inputField != null && _hasNativeEditCreated && visible)
+		if (_fakeTimer >= androidUpdateDeltaTime && inputField != null && _hasNativeEditCreated && visible)
 		{
 			SetRectNative(_textComponent.rectTransform);
 			_fakeTimer = 0f;
@@ -312,7 +313,7 @@ public class NativeEditBox : PluginMsgReceiver
             ["fontSize"] = mConfig.fontSize,
             ["contentType"] = mConfig.contentType,
             ["align"] = mConfig.align,
-            ["withDoneButton"] = withDoneButton,
+            ["withDoneButton"] = iOSWithDoneButton,
             ["placeHolder"] = mConfig.placeHolder,
             ["placeHolderColor_r"] = mConfig.placeHolderColor.r,
             ["placeHolderColor_g"] = mConfig.placeHolderColor.g,
@@ -320,7 +321,7 @@ public class NativeEditBox : PluginMsgReceiver
             ["placeHolderColor_a"] = mConfig.placeHolderColor.a,
             ["multiline"] = mConfig.multiline
         };
-        switch(returnKeyType)
+        switch(singleLineReturnKeyType)
         {
             case ReturnKeyType.Next:
                 jsonMsg["return_key_type"] = "Next";

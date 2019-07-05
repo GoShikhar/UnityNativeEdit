@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/androidProj.iml" filepath="$PROJECT_DIR$/androidProj.iml" />
-      <module fileurl="file://$PROJECT_DIR$/androidProj.iml" filepath="$PROJECT_DIR$/androidProj.iml" />
-      <module fileurl="file://$PROJECT_DIR$/nativeeditplugin/nativeeditplugin.iml" filepath="$PROJECT_DIR$/nativeeditplugin/nativeeditplugin.iml" />
       <module fileurl="file://$PROJECT_DIR$/nativeeditplugin/nativeeditplugin.iml" filepath="$PROJECT_DIR$/nativeeditplugin/nativeeditplugin.iml" />
     </modules>
   </component>

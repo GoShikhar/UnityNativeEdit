@@ -45,7 +45,7 @@ public class NativeEditPlugin {
                 if (mainLayout != null)
                     topViewGroup.removeView(mainLayout);
 
-                final ViewGroup rootView = (ViewGroup) unityActivity.findViewById(android.R.id.content);
+                final ViewGroup rootView = unityActivity.findViewById(android.R.id.content);
                 View topMostView = getLeafView(rootView);
                 topViewGroup = (ViewGroup) topMostView.getParent();
                 mainLayout = new RelativeLayout(unityActivity);

@@ -209,10 +209,7 @@ public class EditBox {
             edit.setText("");
             edit.setHint(placeHolder);
 
-            Rect rect = new Rect((int) x, (int) y, (int) (x + width), (int) (y + height));
-            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(rect.width(), rect.height());
-            lp.setMargins(rect.left, rect.top, 0, 0);
-            edit.setLayoutParams(lp);
+            SetRect((int)x, (int)y, (int)width, (int)height);
             edit.setPadding(0, 0, 0, 0);
 
             int editInputType = 0;
@@ -271,10 +268,6 @@ public class EditBox {
                         default:
                             editInputType = InputType.TYPE_CLASS_TEXT;
                     }
-
-                    if (multiline)
-                        editInputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
-
                     switch (inputType) {
                         case "AutoCorrect":
                             editInputType |= InputType.TYPE_TEXT_FLAG_AUTO_CORRECT;
@@ -290,55 +283,58 @@ public class EditBox {
                     break; // No action
 
             }
+            if (multiline)
+                editInputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
             edit.setInputType(editInputType);
 
             int gravity = 0;
             switch (alignment) {
                 case "UpperLeft":
-                    gravity = Gravity.TOP | Gravity.LEFT;
+                    gravity = Gravity.TOP | Gravity.START;
                     break;
                 case "UpperCenter":
                     gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
                     break;
                 case "UpperRight":
-                    gravity = Gravity.TOP | Gravity.RIGHT;
+                    gravity = Gravity.TOP | Gravity.END;
                     break;
                 case "MiddleLeft":
-                    gravity = Gravity.CENTER_VERTICAL | Gravity.LEFT;
+                    gravity = Gravity.CENTER_VERTICAL | Gravity.START;
                     break;
                 case "MiddleCenter":
                     gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
                     break;
                 case "MiddleRight":
-                    gravity = Gravity.CENTER_VERTICAL | Gravity.RIGHT;
+                    gravity = Gravity.CENTER_VERTICAL | Gravity.END;
                     break;
                 case "LowerLeft":
-                    gravity = Gravity.BOTTOM | Gravity.LEFT;
+                    gravity = Gravity.BOTTOM | Gravity.START;
                     break;
                 case "LowerCenter":
                     gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
                     break;
                 case "LowerRight":
-                    gravity = Gravity.BOTTOM | Gravity.RIGHT;
+                    gravity = Gravity.BOTTOM | Gravity.END;
                     break;
             }
             edit.setGravity(gravity);
 
             int imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI;
-            switch (returnKeyType) {
-                case "Next":
-                    imeOptions |= EditorInfo.IME_ACTION_NEXT;
-                    break;
-                case "Done":
-                    imeOptions |= EditorInfo.IME_ACTION_DONE;
-                    break;
-                case "Send":
-                    imeOptions |= EditorInfo.IME_ACTION_SEND;
-                    break;
-                case "Go":
-                    imeOptions |= EditorInfo.IME_ACTION_GO;
-                    break;
-            }
+            if (!multiline)
+                switch (returnKeyType) {
+                    case "Next":
+                        imeOptions |= EditorInfo.IME_ACTION_NEXT;
+                        break;
+                    case "Done":
+                        imeOptions |= EditorInfo.IME_ACTION_DONE;
+                        break;
+                    case "Send":
+                        imeOptions |= EditorInfo.IME_ACTION_SEND;
+                        break;
+                    case "Go":
+                        imeOptions |= EditorInfo.IME_ACTION_GO;
+                        break;
+                }
             edit.setImeOptions(imeOptions);
 
             edit.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) fontSize);
@@ -391,13 +387,12 @@ public class EditBox {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start,
                                               int count, int after) {
-                    // TODO Auto-generated method stub
+
                 }
 
                 @Override
                 public void onTextChanged(CharSequence s, int start,
                                           int before, int count) {
-                    // TODO Auto-generated method stub
 
                 }
             });
