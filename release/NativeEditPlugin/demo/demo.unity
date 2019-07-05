@@ -726,7 +726,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 837705503}
-        m_MethodName: OnEditEnded
+        m_MethodName: OnEndEdit
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -846,11 +846,11 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  OnBeginEditing:
+  OnBeginEdit:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 837705503}
-        m_MethodName: OnBeginEditing
+        m_MethodName: OnBeginEdit
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 701725106}
@@ -1589,7 +1589,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 837705503}
-        m_MethodName: OnEditEnded
+        m_MethodName: OnEndEdit
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1689,11 +1689,11 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  OnBeginEditing:
+  OnBeginEdit:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 837705503}
-        m_MethodName: OnBeginEditing
+        m_MethodName: OnBeginEdit
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 2030731848}

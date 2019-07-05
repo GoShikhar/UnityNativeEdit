@@ -16,7 +16,7 @@ public class Demo : MonoBehaviour
         txt.text = $"val changed: {str}";
     }
 
-    public void OnEditEnded(string str)
+    public void OnEndEdit(string str)
     {
         txt.text = $"edit ended: {str}";
     }
@@ -28,7 +28,7 @@ public class Demo : MonoBehaviour
         txt.text = "return pressed";
     }
 
-    public void OnBeginEditing(NativeEditBox editBox)
+    public void OnBeginEdit(NativeEditBox editBox)
     {
         txt.text = "begin editing";
     }

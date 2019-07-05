@@ -71,7 +71,7 @@ public class NativeEditBox : PluginMsgReceiver
 
     public event Action returnPressed;
     public UnityEvent onReturnPressed; // only invoke on iOS & Android
-    public UnityEvent OnBeginEditing; // only invoke on iOS & Android
+    public UnityEvent OnBeginEdit; // only invoke on iOS & Android
 
     private bool _hasNativeEditCreated;
 
@@ -89,7 +89,6 @@ public class NativeEditBox : PluginMsgReceiver
     private const string MSG_SET_VISIBLE = "SetVisible";
     private const string MSG_TEXT_CHANGE = "TextChange";
     private const string MSG_TEXT_BEGIN_EDIT = "TextBeginEdit";
-
     private const string MSG_TEXT_END_EDIT = "TextEndEdit";
 
     // to fix bug Some keys 'back' & 'enter' are eaten by unity and never arrive at plugin
@@ -266,7 +265,7 @@ public class NativeEditBox : PluginMsgReceiver
         var msg = jsonMsg.GetString("msg");
         if(msg.Equals(MSG_TEXT_BEGIN_EDIT))
         {
-            OnBeginEditing?.Invoke();
+            OnBeginEdit?.Invoke();
         }
         else if(msg.Equals(MSG_TEXT_CHANGE) || msg.Equals(MSG_TEXT_END_EDIT))
         {
