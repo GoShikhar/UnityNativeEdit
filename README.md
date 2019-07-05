@@ -1,4 +1,4 @@
-## UnityNativeEdit v1.5
+## UnityNativeEdit v1.6
 Unity Native Input Plugin for both iOS and Android (UGUI InputField compatible).
 
 This means you don't need a separate 'Unity' Input box and you can use all native text functions such as `Select`, `Copy` and `Paste`.
@@ -20,15 +20,12 @@ If you want to tinker with the project yourself you need to build the Android pr
 ### Etc
 1. NativeEditBox will work with delegate defined in your Unity UI InputField, `On Value Change` and `End Edit`
 2. It's open source and free to use/redistribute!
-3. Please refer to `demo` Unity project.
 
 - - -
-## UnityNativeEdit v1.5 中文说明
-UnityNativeEdit是适用于Unity 5版本、支持iOS和Android的原生输入框插件，免去直接使用UGUI的InputField产生的键盘方面的不便，并且可以和原生应用一样方便地对输入文本进行选择、复制和粘贴等操作。
+## UnityNativeEdit v1.6 中文说明
+UnityNativeEdit是适用于Unity、支持iOS和Android的原生输入框插件，免去直接使用UGUI的InputField产生的键盘方面的不便，并且可以和原生应用一样方便地对输入文本进行选择、复制和粘贴等操作。
 
-本repo的1.5版本针对原版进行了各种优化和bug修复，无需像原版那样要事先挂载`PluginMsgHandler`脚本，并且从2017年起被某国产知名二次元手机游戏使用。
-
-Unity 2017版本尚未测试。
+本repo的1.6版本针对[原版](https://github.com/YousicianGit/UnityNativeEdit/)进行了各种优化和bug修复，无需像原版那样要事先挂载`PluginMsgHandler`脚本，并且自2017年起被某国产知名二次元手机游戏使用。
 
 ### 使用方法
 1. 直接拷贝`release/NativeEditPlugin`目录下的文件到你的项目中；
@@ -38,13 +35,13 @@ Unity 2017版本尚未测试。
 3. 发布到真机上试试吧！
 
 ### 生成插件
-如果你想自行修改，你需要在Android Studio中重新生成。如果你只想在iOS项目上使用该插件，只需修改 Objective-C 代码即可。
+如果你想自行修改插件，对安卓平台而言，你需要在Android Studio中重新生成；而对iOS平台而言，只需修改 Objective-C 代码即可。
 
 1. 在Android Studio中打开文件夹`src/androidProj`；
-2. 选择“View -> Tool Windows -> Gradle”；
-3. 运行“:nativeeditplugin -> other -> makeJar”任务；
+2. 选择 View -> Tool Windows -> Gradle ；
+3. 运行 :nativeeditplugin -> other -> makeJar 任务；
 4. 该任务会在`src/androidProj/nativeeditplugin/build/outputs/aar`下生成.aar文件（即使任务名字叫做makeJar）；
-5. 拷贝这个名为`nativeeditplugin-release.aar`的文件至`release\NativeEditPlugin\Plugins\Android`文件夹。
+5. 拷贝`nativeeditplugin-release.aar`至`release\NativeEditPlugin\Plugins\Android`文件夹。
 
 ### Etc
 1. 本插件可以响应同一GameObject上的InputField的`OnValueChanged`和`OnEndEdit`事件。
