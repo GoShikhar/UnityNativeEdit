@@ -5,24 +5,17 @@ This means you don't need a separate 'Unity' Input box and you can use all nativ
 
 ### Usage
 1. Simply copy the files in `release/NativeEditPlugin` into your existing unity project asset folder.
-2. If using Unity 5.6.0 or 5.6.1, make sure that your Plugins/Android/AndroidManifest.xml defines 
-    ```
-    <activity android:name="com.bkmin.android.UnityPlayerNotOnTopActivity"
-       android:label="@string/app_name">
-    ```
-    instead of
-    ```
-    <activity android:name="com.unity3d.player.UnityPlayerNativeActivity"
-        android:label="@string/app_name">
-    ```
-    Note that there can be multiple Android manifests in a Unity project (if you have multiple Android plugins) and Unity merges them to a single manifest when building. The `activity` on the manifest closest to the root level of `Plugins/Android` directory seems to override definitions in other manifests so make sure to modify that manifest
+2. Attach ```NativeEditBox``` script to your UnityUI ```InputField```object.
+3. Build and run on your android or ios device!
 
-    If another plugin you're using is overriding the `UnityPlayerActivity` and the input field appears invisible you need to modify the overriding `UnityPlayerActivity` so that it doesn't appear on top of native views, see https://github.com/YousicianGit/UnityNativeEdit/issues/34.
-    
-    You can refer to sample `AndroidManifest.xml` in `Plugins/Android` folder.
- 
-3. Attach ```NativeEditBox``` script to your UnityUI ```InputField```object.
-4. Build and run on your android or ios device!
+### Building the Android plugin
+If you want to tinker with the project yourself you need to build the Android project again in AndroidStudio (for iOS you can just modify the Objective-C code and it will get built at the same time as the Unity project). 
+
+1. Open the `src/androidProj` directory in AndroidStudio.
+2. Select View -> Tool Windows -> Gradle in AndroidStudio.
+3. In Gradle run the :nativeeditplugin -> other -> makeJar task.
+4. It's a bit confusing but the task seems to generate .aar files (even though it was called makeJar, not sure what's up with that) in the `src/androidProj/nativeeditplugin/build/outputs/aar` directory.
+5. To test in the demo Unity project copy the `nativeeditplugin-release.aar` file (from the output directory) to the `release\NativeEditPlugin\Plugins\Android` directory. This file is symlinked to the Unity demo project.
 
 ### Etc
 1. NativeEditBox will work with delegate defined in your Unity UI InputField, `On Value Change` and `End Edit`
@@ -33,29 +26,25 @@ This means you don't need a separate 'Unity' Input box and you can use all nativ
 ## UnityNativeEdit v1.5 中文说明
 UnityNativeEdit是适用于Unity 5版本、支持iOS和Android的原生输入框插件，免去直接使用UGUI的InputField产生的键盘方面的不便，并且可以和原生应用一样方便地对输入文本进行选择、复制和粘贴等操作。
 
-本repo的1.5版本针对原版进行了各种优化和bug修复，无需像原版那样要事先挂载`PluginMsgHandler`脚本，并且已被某国产知名手机游戏采用。
+本repo的1.5版本针对原版进行了各种优化和bug修复，无需像原版那样要事先挂载`PluginMsgHandler`脚本，并且从2017年起被某国产知名二次元手机游戏使用。
 
 Unity 2017版本尚未测试。
 
 ### 使用方法
 1. 直接拷贝`release/NativeEditPlugin`目录下的文件到你的项目中；
-2. 如果你使用的是Unity 5.6.0或者5.6.1版本，请确认你的项目的`Plugins/Android/AndroidManifest.xml`文件中：
-    ```
-    <activity android:name="com.unity3d.player.UnityPlayerNativeActivity"
-        android:label="@string/app_name">
-    ```
-    改为：
-    ```
-    <activity android:name="com.bkmin.android.UnityPlayerNotOnTopActivity"
-       android:label="@string/app_name">
-    ```
-    注：如果你使用多个Android插件的话，在一个项目中可能会有多个AndroidManifest.xml文件，Unity会在构建的时候将它们合并为一个文件。在文件结构中离`Plugins/Android`这一层最近的AndroidManifest中的`activity`定义看起来会覆盖其他AndroidManifest中的对应定义，所以请确保你修改的是正确的文件。可以参考demo中`Plugins/Android`文件夹里的`AndroidManifest.xml`。
-
-    如果其他Android插件需要修改该`activity`定义同时修改后输入框不可用的话，参见https://github.com/YousicianGit/UnityNativeEdit/issues/34 。
-3. 在你的InputField对象上添加`NativeEditBox`脚本组件。
+2. 在你的InputField对象上添加`NativeEditBox`脚本组件。
 
     添加后，如果要通过代码修改输入框的文本的话，请务必通过`NativeEditBox`脚本的`text`属性进行操作，否则将不会看到修改后的文本。
-4. 发布到真机上试试吧！
+3. 发布到真机上试试吧！
+
+### 生成插件
+如果你想自行修改，你需要在Android Studio中重新生成。如果你只想在iOS项目上使用该插件，只需修改 Objective-C 代码即可。
+
+1. 在Android Studio中打开文件夹`src/androidProj`；
+2. 选择“View -> Tool Windows -> Gradle”；
+3. 运行“:nativeeditplugin -> other -> makeJar”任务；
+4. 该任务会在`src/androidProj/nativeeditplugin/build/outputs/aar`下生成.aar文件（即使任务名字叫做makeJar）；
+5. 拷贝这个名为`nativeeditplugin-release.aar`的文件至`release\NativeEditPlugin\Plugins\Android`文件夹。
 
 ### Etc
 1. 本插件可以响应同一GameObject上的InputField的`OnValueChanged`和`OnEndEdit`事件。

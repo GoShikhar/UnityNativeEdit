@@ -70,6 +70,7 @@ public class NativeEditBox : PluginMsgReceiver
 
 	public event Action returnPressed;
 	public UnityEngine.Events.UnityEvent onReturnPressed;
+	public UnityEngine.Events.UnityEvent OnBeginEditing;
 
 	private bool _hasNativeEditCreated = false;
 
@@ -83,9 +84,11 @@ public class NativeEditBox : PluginMsgReceiver
 	private const string MSG_REMOVE = "RemoveEdit";
 	private const string MSG_SET_TEXT = "SetText";
 	private const string MSG_SET_RECT = "SetRect";
+	private const string MSG_SET_TEXTSIZE = "SetTextSize";
 	private const string MSG_SET_FOCUS = "SetFocus";
 	private const string MSG_SET_VISIBLE = "SetVisible";
 	private const string MSG_TEXT_CHANGE = "TextChange";
+	private const string MSG_TEXT_BEGIN_EDIT = "TextBeginEdit";
 	private const string MSG_TEXT_END_EDIT = "TextEndEdit";
 	// to fix bug Some keys 'back' & 'enter' are eaten by unity and never arrive at plugin
 	private const string MSG_ANDROID_KEY_DOWN = "AndroidKeyDown";
@@ -201,7 +204,7 @@ public class NativeEditBox : PluginMsgReceiver
 		this.PrepareNativeEdit();
 #if (UNITY_IPHONE || UNITY_ANDROID) && !UNITY_EDITOR
 		this.CreateNativeEdit();
-		this.SetTextNative(this._textComponent.text);
+		this.SetTextNative(this._inputField.text);
 
 		_inputField.placeholder.gameObject.SetActive(false);
 		_textComponent.enabled = false;
@@ -246,25 +249,6 @@ public class NativeEditBox : PluginMsgReceiver
 		mConfig.multiline = _inputField.lineType != InputField.LineType.SingleLine;
 	}
 
-	private void onTextChange(string newText)
-	{
-		// Avoid firing a delayed onValueChanged event if the text was changed from Unity with the text property in this
-		// class.
-		if (newText == this._inputField.text)
-			return;
-
-		this._inputField.text = newText;
-		if (this._inputField.onValueChanged != null)
-		this._inputField.onValueChanged.Invoke(newText);
-	}
-
-	private void onTextEditEnd(string newText)
-	{
-		this._inputField.text = newText;
-		if (this._inputField.onEndEdit != null)
-			this._inputField.onEndEdit.Invoke(newText);
-	}
-
 	public override void OnPluginMsgDirect(JsonObject jsonMsg)
 	{
 		PluginMsgHandler.GetInstanceForReceiver(this).StartCoroutine(PluginsMessageRoutine(jsonMsg));
@@ -276,15 +260,14 @@ public class NativeEditBox : PluginMsgReceiver
 		yield return null;
 
 		string msg = jsonMsg.GetString("msg");
-		if (msg.Equals(MSG_TEXT_CHANGE))
+		if (msg.Equals(MSG_TEXT_BEGIN_EDIT))
 		{
-			string text = jsonMsg.GetString("text");
-			this.onTextChange(text);
+			if (this.OnBeginEditing != null)
+				this.OnBeginEditing.Invoke();
 		}
-		else if (msg.Equals(MSG_TEXT_END_EDIT))
+		else if (msg.Equals(MSG_TEXT_CHANGE) || msg.Equals(MSG_TEXT_END_EDIT))
 		{
-			string text = jsonMsg.GetString("text");
-			this.onTextEditEnd(text);
+			this._inputField.text = jsonMsg.GetString("text");
 		}
 		else if (msg.Equals(MSG_RETURN_PRESSED))
 		{
@@ -312,16 +295,13 @@ public class NativeEditBox : PluginMsgReceiver
 	{
 		Rect rectScreen = GetScreenRectFromRectTransform(this._textComponent.rectTransform);
 
-		JsonObject jsonMsg = new JsonObject();
-
+		var jsonMsg = new JsonObject();
 		jsonMsg["msg"] = MSG_CREATE;
-
 		jsonMsg["x"] = rectScreen.x/Screen.width;
 		jsonMsg["y"] = rectScreen.y/Screen.height;
 		jsonMsg["width"] = rectScreen.width/Screen.width;
 		jsonMsg["height"] = rectScreen.height/Screen.height;
 		jsonMsg["characterLimit"] = mConfig.characterLimit;
-
 		jsonMsg["textColor_r"] = mConfig.textColor.r;
 		jsonMsg["textColor_g"] = mConfig.textColor.g;
 		jsonMsg["textColor_b"] = mConfig.textColor.b;
@@ -341,7 +321,6 @@ public class NativeEditBox : PluginMsgReceiver
 		jsonMsg["placeHolderColor_b"] = mConfig.placeHolderColor.b;
 		jsonMsg["placeHolderColor_a"] = mConfig.placeHolderColor.a;
 		jsonMsg["multiline"] = mConfig.multiline;
-
 		switch (returnKeyType)
 		{
 			case ReturnKeyType.Next:
@@ -373,42 +352,42 @@ public class NativeEditBox : PluginMsgReceiver
 	}
 
 	private void SetTextNative(string newText)
-	{
-		if (string.IsNullOrEmpty(newText))
-		{
-			newText = string.Empty;
-		}
-		
-		JsonObject jsonMsg = new JsonObject();
-
+	{		
+		var jsonMsg = new JsonObject();
 		jsonMsg["msg"] = MSG_SET_TEXT;
-		jsonMsg["text"] = newText;
-
+		jsonMsg["text"] = newText ?? string.Empty;
 		this.SendPluginMsg(jsonMsg);
 	}
 
 	private void RemoveNative()
 	{   
-		JsonObject jsonMsg = new JsonObject();
-
+		var jsonMsg = new JsonObject();
 		jsonMsg["msg"] = MSG_REMOVE;
 		this.SendPluginMsg(jsonMsg);
 	}
 
 	public void SetRectNative(RectTransform rectTrans)
 	{
-		Rect rectScreen = GetScreenRectFromRectTransform(rectTrans);
+		var rectScreen = GetScreenRectFromRectTransform(rectTrans);
 
-		JsonObject jsonMsg = new JsonObject();
-
+		var jsonMsg = new JsonObject();
 		jsonMsg["msg"] = MSG_SET_RECT;
-
 		jsonMsg["x"] = rectScreen.x/Screen.width;
 		jsonMsg["y"] = rectScreen.y/Screen.height;
 		jsonMsg["width"] = rectScreen.width/Screen.width;
 		jsonMsg["height"] = rectScreen.height/Screen.height;
-
 		this.SendPluginMsg(jsonMsg);
+
+		var fontRectHeightRatio = rectScreen.height / this._textComponent.rectTransform.rect.height;
+		var fontSize = this._textComponent.fontSize * fontRectHeightRatio;
+		if (Math.Abs(this.mConfig.fontSize - fontSize) > 0.1f)
+		{
+			var sizeMsg = new JsonObject();
+			sizeMsg["msg"] = MSG_SET_TEXTSIZE;
+			sizeMsg["fontSize"] = fontSize;
+			this.SendPluginMsg(sizeMsg);
+			this.mConfig.fontSize = fontSize;
+		}
 	}
 
 	public void SetFocus(bool bFocus)
@@ -420,11 +399,9 @@ public class NativeEditBox : PluginMsgReceiver
 			return;
 		}
 
-		JsonObject jsonMsg = new JsonObject();
-
+		var jsonMsg = new JsonObject();
 		jsonMsg["msg"] = MSG_SET_FOCUS;
 		jsonMsg["isFocus"] = bFocus;
-
 		this.SendPluginMsg(jsonMsg);
 #else
 		if (gameObject.activeInHierarchy)
@@ -447,11 +424,9 @@ public class NativeEditBox : PluginMsgReceiver
 			return;
 		}
 
-		JsonObject jsonMsg = new JsonObject();
-
+		var jsonMsg = new JsonObject();
 		jsonMsg["msg"] = MSG_SET_VISIBLE;
 		jsonMsg["isVisible"] = bVisible;
-
 		this.SendPluginMsg(jsonMsg);
 
 		this.visible = bVisible;
@@ -460,8 +435,7 @@ public class NativeEditBox : PluginMsgReceiver
 #if UNITY_ANDROID && !UNITY_EDITOR
 	private void ForceSendKeydown_Android(string key)
 	{
-		JsonObject jsonMsg = new JsonObject();
-
+		var jsonMsg = new JsonObject();
 		jsonMsg["msg"] = MSG_ANDROID_KEY_DOWN;
 		jsonMsg["key"] = key;
 		this.SendPluginMsg(jsonMsg);

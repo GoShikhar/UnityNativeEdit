@@ -24,7 +24,7 @@ repositories {
     }
 }
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    provided files('./libs/UnityPlayer.jar')
 }
 
 task clearJar(type: Delete) {
@@ -34,8 +34,6 @@ task clearJar(type: Delete) {
 task makeJar(type: Copy) {
     from('build/intermediates/bundles/release/')
     into('build/outputs/')
-    include('classes.jar')
-    rename ('classes.jar', 'nativeeditplugin.jar')
 }
 
 makeJar.dependsOn(clearJar, build)

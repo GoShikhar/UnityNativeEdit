@@ -16,8 +16,7 @@ UIViewController* unityViewController = nil;
 NSMutableDictionary* editBoxDict = nil;
 UITapGestureRecognizer* tapRecognizer = nil;
 
-char    g_unityName[64];
-int characterLimit;
+char g_unityName[64];
 
 bool approxEqualFloat(float x, float y)
 {
@@ -109,6 +108,10 @@ bool approxEqualFloat(float x, float y)
     {
         [self setRect:jsonMsg];
     }
+    else if ([msg isEqualToString:MSG_SET_TEXTSIZE])
+    {
+        [self setTextSize:jsonMsg];
+    }
     else if ([msg isEqualToString:MSG_SET_FOCUS])
     {
         BOOL isFocus = [jsonMsg getBool:@"isFocus"];
@@ -146,6 +149,26 @@ bool approxEqualFloat(float x, float y)
     editView.frame = CGRectMake(x, y, width, height);
 }
 
+-(void) setTextSize:(JsonObject*)json
+{
+    float fontSize = [json getFloat:@"fontSize"];
+    // Conversion for retina displays
+    fontSize = fontSize / [UIScreen mainScreen].scale;
+
+    if([editView isKindOfClass:[UITextField class]])
+    {
+        UITextField *textField = ((UITextField*)editView);
+        UIFont *newFont = [[textField font] fontWithSize:fontSize];
+        [textField setFont:newFont];
+    }
+    else if([editView isKindOfClass:[UITextView class]])
+    {
+        UITextView *textView = ((UITextView*)editView);
+        UIFont *newFont = [[textView font] fontWithSize:fontSize];
+        [textView setFont:newFont];
+    }
+}
+
 -(void) create:(JsonObject*)json
 {
     NSString* placeholder = [json getString:@"placeHolder"];
@@ -158,7 +181,7 @@ bool approxEqualFloat(float x, float y)
     float width = [json getFloat:@"width"] * viewController.view.bounds.size.width;
     float height = [json getFloat:@"height"] * viewController.view.bounds.size.height;
     
-    characterLimit = [json getInt:@"characterLimit"];
+    [self setMaxLength:[json getInt:@"characterLimit"]];
     
     float textColor_r = [json getFloat:@"textColor_r"];
     float textColor_g = [json getFloat:@"textColor_g"];
@@ -375,7 +398,7 @@ bool approxEqualFloat(float x, float y)
 
 -(IBAction) doneClicked:(id)sender
 {
-    [self showKeyboard:false];
+    [self hideKeyboard];
 }
 
 -(int) getLineCount
@@ -425,13 +448,14 @@ bool approxEqualFloat(float x, float y)
     return @"";
 }
 
--(void) showKeyboard:(bool)isShow
+-(void) hideKeyboard
 {
-    [viewController.view endEditing:(isShow ? YES : NO)];
+    [editView resignFirstResponder];
 }
+
 -(void) setVisible:(bool)isVisible
 {
-    editView.hidden = (isVisible ? NO : YES);
+    editView.hidden = !isVisible;
 }
 
 -(void) onTextChange:(NSString*) text
@@ -440,6 +464,14 @@ bool approxEqualFloat(float x, float y)
     
     [jsonToUnity setString:@"msg" value:MSG_TEXT_CHANGE];
     [jsonToUnity setString:@"text" value:text];
+    [self sendJsonToUnity:jsonToUnity];
+}
+
+-(void) onTextEditBegin
+{
+    JsonObject* jsonToUnity = [[JsonObject alloc] init];
+
+    [jsonToUnity setString:@"msg" value:MSG_TEXT_BEGIN_EDIT];
     [self sendJsonToUnity:jsonToUnity];
 }
 
@@ -452,14 +484,29 @@ bool approxEqualFloat(float x, float y)
     [self sendJsonToUnity:jsonToUnity];
 }
 
--(void) textViewDidChange:(UITextView *)textView
+-(void) textViewDidBeginEditing:(UITextView *)textView
 {
-    [self onTextChange:textView.text];
+    [self onTextEditBegin];
 }
 
 -(void) textViewDidEndEditing:(UITextView *)textView
 {
     [self onTextEditEnd:textView.text];
+}
+
+-(void) textViewDidChange:(UITextView *)textView
+{
+    [self onTextChange:textView.text];
+}
+
+-(void) textFieldDidBeginEditing:(UITextField *)textField
+{
+    [self onTextEditBegin];
+}
+
+-(void) textFieldDidEndEditing:(UITextField *)textField
+{
+    [self onTextEditEnd:textField.text];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
@@ -480,8 +527,8 @@ bool approxEqualFloat(float x, float y)
     }
     
     NSUInteger newLength = [textField.text length] + [string length] - range.length;
-    if(characterLimit > 0)
-        return newLength <= characterLimit;
+    if([self maxLength] > 0)
+        return newLength <= [self maxLength];
     else
         return YES;
 }
@@ -552,7 +599,7 @@ bool approxEqualFloat(float x, float y)
     {
         if ([eb isFocused])
         {
-            [eb showKeyboard:NO];
+            [eb hideKeyboard];
         }
     }
 }

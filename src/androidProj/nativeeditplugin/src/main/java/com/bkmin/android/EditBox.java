@@ -56,9 +56,11 @@ public class EditBox {
     private static final String MSG_REMOVE = "RemoveEdit";
     private static final String MSG_SET_TEXT = "SetText";
     private static final String MSG_SET_RECT = "SetRect";
+    private static final String MSG_SET_TEXTSIZE = "SetTextSize";
     private static final String MSG_SET_FOCUS = "SetFocus";
     private static final String MSG_SET_VISIBLE = "SetVisible";
     private static final String MSG_TEXT_CHANGE = "TextChange";
+    private static final String MSG_TEXT_BEGIN_EDIT = "TextBeginEdit";
     private static final String MSG_TEXT_END_EDIT = "TextEndEdit";
     private static final String MSG_ANDROID_KEY_DOWN = "AndroidKeyDown";
     private static final String MSG_RETURN_PRESSED = "ReturnPressed";
@@ -132,6 +134,9 @@ public class EditBox {
                     break;
                 case MSG_SET_RECT:
                     this.SetRect(jsonMsg);
+                    break;
+                case MSG_SET_TEXTSIZE:
+                    this.SetTextSize(jsonMsg);
                     break;
                 case MSG_SET_FOCUS:
                     boolean isFocus = jsonMsg.getBoolean("isFocus");
@@ -352,15 +357,14 @@ public class EditBox {
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
 
-                    if (!hasFocus) {
-                        JSONObject msgTextEndJSON = new JSONObject();
-                        try {
-                            msgTextEndJSON.put("msg", MSG_TEXT_END_EDIT);
-                            msgTextEndJSON.put("text", eb.GetText());
-                        } catch (JSONException e) {
-                        }
-                        eb.SendJsonToUnity(msgTextEndJSON);
+                    JSONObject msgTextEndJSON = new JSONObject();
+                    try
+                    {
+                        msgTextEndJSON.put("msg", hasFocus ? MSG_TEXT_BEGIN_EDIT : MSG_TEXT_END_EDIT);
+                        msgTextEndJSON.put("text", eb.GetText());
                     }
+                    catch(JSONException e) {}
+                    eb.SendJsonToUnity(msgTextEndJSON);
                     SetFocus(hasFocus);
                 }
             });
@@ -473,6 +477,15 @@ public class EditBox {
         this.showKeyboard(isFocus);
     }
 
+    private void SetTextSize(JSONObject jsonRect)
+    {
+        try
+        {
+            double fontSize = jsonRect.getDouble("fontSize");
+            edit.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) fontSize);
+        } catch (JSONException e) {}
+    }
+
     private void SetRect(JSONObject jsonRect) {
         try {
             double x = jsonRect.getDouble("x") * (double) layout.getWidth();
@@ -480,8 +493,7 @@ public class EditBox {
             double width = jsonRect.getDouble("width") * (double) layout.getWidth();
             double height = jsonRect.getDouble("height") * (double) layout.getHeight();
             SetRect((int) x, (int) y, (int) width, (int) height);
-        } catch (JSONException e) {
-        }
+        } catch (JSONException e) {}
     }
 
     private void SetRect(int x, int y, int width, int height) {
