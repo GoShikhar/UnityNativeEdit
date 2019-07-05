@@ -50,25 +50,25 @@ public class NativeEditPlugin {
                 topViewGroup = (ViewGroup) topMostView.getParent();
                 mainLayout = new RelativeLayout(unityActivity);
                 RelativeLayout.LayoutParams rlp = new RelativeLayout.LayoutParams(
-                    RelativeLayout.LayoutParams.MATCH_PARENT,
-                    RelativeLayout.LayoutParams.MATCH_PARENT);
+                        RelativeLayout.LayoutParams.MATCH_PARENT,
+                        RelativeLayout.LayoutParams.MATCH_PARENT);
                 topViewGroup.addView(mainLayout, rlp);
 
                 rootView.setOnSystemUiVisibilityChangeListener
-                    (new View.OnSystemUiVisibilityChangeListener() {
-                        @Override
-                        public void onSystemUiVisibilityChange(int visibility) {
-                            int systemUiVisibilitySettings =
-                                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                    | View.SYSTEM_UI_FLAG_FULLSCREEN;
-                            if (Build.VERSION.SDK_INT >= 19)
-                                systemUiVisibilitySettings |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-                            rootView.setSystemUiVisibility(systemUiVisibilitySettings);
-                        }
-                    });
+                        (new View.OnSystemUiVisibilityChangeListener() {
+                            @Override
+                            public void onSystemUiVisibilityChange(int visibility) {
+                                int systemUiVisibilitySettings =
+                                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                                | View.SYSTEM_UI_FLAG_FULLSCREEN;
+                                if (Build.VERSION.SDK_INT >= 19)
+                                    systemUiVisibilitySettings |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+                                rootView.setSystemUiVisibility(systemUiVisibilitySettings);
+                            }
+                        });
             }
         });
     }

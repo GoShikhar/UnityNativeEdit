@@ -93,9 +93,9 @@ public class EditBox {
         edit = null;
 
         //Tap on the layout to clear focus of EditText
-        layout.setOnTouchListener(new View.OnTouchListener(){
+        layout.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent){
+            public boolean onTouch(View view, MotionEvent motionEvent) {
                 layout.setFocusable(true);
                 layout.setFocusableInTouchMode(true);
                 layout.requestFocus();
@@ -358,12 +358,11 @@ public class EditBox {
                 public void onFocusChange(View v, boolean hasFocus) {
 
                     JSONObject msgTextEndJSON = new JSONObject();
-                    try
-                    {
+                    try {
                         msgTextEndJSON.put("msg", hasFocus ? MSG_TEXT_BEGIN_EDIT : MSG_TEXT_END_EDIT);
                         msgTextEndJSON.put("text", eb.GetText());
+                    } catch (JSONException e) {
                     }
-                    catch(JSONException e) {}
                     eb.SendJsonToUnity(msgTextEndJSON);
                     SetFocus(hasFocus);
                 }
@@ -376,7 +375,7 @@ public class EditBox {
 
                     if (characterLimit > 0 && s.length() >= characterLimit + 1) {
                         s.delete(s.length() - 1,
-                            s.length());
+                                s.length());
                         edit.setText(s);
                         edit.setSelection(s.length());
                     }
@@ -407,9 +406,9 @@ public class EditBox {
                 @Override
                 public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                     if (actionId == EditorInfo.IME_ACTION_NEXT
-                        || actionId == EditorInfo.IME_ACTION_DONE
-                        || actionId == EditorInfo.IME_ACTION_SEND
-                        || actionId == EditorInfo.IME_ACTION_GO) {
+                            || actionId == EditorInfo.IME_ACTION_DONE
+                            || actionId == EditorInfo.IME_ACTION_SEND
+                            || actionId == EditorInfo.IME_ACTION_GO) {
                         JSONObject jsonToUnity = new JSONObject();
                         try {
                             jsonToUnity.put("msg", MSG_RETURN_PRESSED);
@@ -477,13 +476,12 @@ public class EditBox {
         this.showKeyboard(isFocus);
     }
 
-    private void SetTextSize(JSONObject jsonRect)
-    {
-        try
-        {
+    private void SetTextSize(JSONObject jsonRect) {
+        try {
             double fontSize = jsonRect.getDouble("fontSize");
             edit.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) fontSize);
-        } catch (JSONException e) {}
+        } catch (JSONException e) {
+        }
     }
 
     private void SetRect(JSONObject jsonRect) {
@@ -493,7 +491,8 @@ public class EditBox {
             double width = jsonRect.getDouble("width") * (double) layout.getWidth();
             double height = jsonRect.getDouble("height") * (double) layout.getHeight();
             SetRect((int) x, (int) y, (int) width, (int) height);
-        } catch (JSONException e) {}
+        } catch (JSONException e) {
+        }
     }
 
     private void SetRect(int x, int y, int width, int height) {
