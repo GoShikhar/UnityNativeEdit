@@ -3,6 +3,7 @@ package com.bkmin.android;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
@@ -88,6 +89,7 @@ public class EditBox {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private EditBox(RelativeLayout mainLayout) {
         layout = mainLayout;
         edit = null;
@@ -276,6 +278,8 @@ public class EditBox {
                             editInputType |= InputType.TYPE_NUMBER_VARIATION_PASSWORD | InputType.TYPE_TEXT_VARIATION_PASSWORD;
                             break;
                     }
+                    if (multiline)
+                        editInputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
                     break;
 
                 default:
@@ -283,8 +287,6 @@ public class EditBox {
                     break; // No action
 
             }
-            if (multiline)
-                editInputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
             edit.setInputType(editInputType);
 
             int gravity = 0;
