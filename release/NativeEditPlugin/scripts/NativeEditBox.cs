@@ -372,7 +372,6 @@ public class NativeEditBox : PluginMsgReceiver
     public void SetRectNative(RectTransform rectTrans)
     {
         var rectScreen = GetScreenRectFromRectTransform(rectTrans);
-
         var jsonMsg = new JsonObject
         {
             ["msg"] = MSG_SET_RECT,
@@ -382,7 +381,11 @@ public class NativeEditBox : PluginMsgReceiver
             ["height"] = rectScreen.height / Screen.height
         };
         SendPluginMsg(jsonMsg);
+    }
 
+    public void SetTextSize(RectTransform rectTrans)
+    {
+        var rectScreen = GetScreenRectFromRectTransform(rectTrans);
         var fontRectHeightRatio = rectScreen.height / _textComponent.rectTransform.rect.height;
         var fontSize = _textComponent.fontSize * fontRectHeightRatio;
         if(Math.Abs(mConfig.fontSize - fontSize) > 0.1f)

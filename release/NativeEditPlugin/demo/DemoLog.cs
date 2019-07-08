@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Demo : MonoBehaviour
+public class DemoLog : MonoBehaviour
 {
     private Text txt;
 

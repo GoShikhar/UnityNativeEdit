@@ -421,7 +421,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 837705503}
-        m_MethodName: OnEditEnded
+        m_MethodName: OnEndEdit
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -829,7 +829,7 @@ MonoBehaviour:
   iOSWithDoneButton: 1
   useInputFieldFont: 0
   clearFocusOnReturnPressed: 1
-  singleLineReturnKeyType: 0
+  singleLineReturnKeyType: 3
   onReturnPressed:
     m_PersistentCalls:
       m_Calls:

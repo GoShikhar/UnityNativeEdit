@@ -209,7 +209,7 @@ public class EditBox {
             edit.setText("");
             edit.setHint(placeHolder);
 
-            SetRect((int)x, (int)y, (int)width, (int)height);
+            SetRect((int) x, (int) y, (int) width, (int) height);
             edit.setPadding(0, 0, 0, 0);
 
             int editInputType = 0;
@@ -367,15 +367,15 @@ public class EditBox {
             edit.addTextChangedListener(new TextWatcher() {
 
                 public void afterTextChanged(Editable s) {
-                    JSONObject jsonToUnity = new JSONObject();
-
                     if (characterLimit > 0 && s.length() >= characterLimit + 1) {
-                        s.delete(s.length() - 1,
-                                s.length());
+                        s.delete(s.length() - 1, s.length());
+                        edit.removeTextChangedListener(this);
                         edit.setText(s);
                         edit.setSelection(s.length());
+                        edit.addTextChangedListener(this);
                     }
 
+                    JSONObject jsonToUnity = new JSONObject();
                     try {
                         jsonToUnity.put("msg", MSG_TEXT_CHANGE);
                         jsonToUnity.put("text", s.toString());
@@ -385,14 +385,12 @@ public class EditBox {
                 }
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start,
-                                              int count, int after) {
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
                 }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start,
-                                          int before, int count) {
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
 
                 }
             });
