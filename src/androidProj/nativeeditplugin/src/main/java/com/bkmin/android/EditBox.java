@@ -82,7 +82,17 @@ public class EditBox {
                     NativeEditPlugin.rootView.getWindowVisibleDisplayFrame(rect);
                     int delta = windowVisibleBottomWithoutKeyboard - rect.bottom;
                     if (delta > keyboardHeightThreshold) {
+                        boolean firstSetKeyboardHeight = keyboardHeight == 0;
                         keyboardHeight = delta;
+                        if (firstSetKeyboardHeight)
+                            // keyboardHeight has not been set when trying to input for the 1st time. Call showKeyboard(true) manually.
+                            for (int i = 0; i < editBoxMap.size(); i++) {
+                                EditBox box = editBoxMap.valueAt(i);
+                                if (box.isFocused()) {
+                                    box.showKeyboard(true);
+                                    break;
+                                }
+                            }
                     } else {
                         windowVisibleBottomWithoutKeyboard = rect.bottom;
                     }
@@ -136,7 +146,8 @@ public class EditBox {
             inputMethodManager.showSoftInput(edit, InputMethodManager.SHOW_FORCED);
             RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) edit.getLayoutParams();
             int bottomMargin = layout.getHeight() - lp.topMargin - lp.height;
-            if (bottomMargin <= keyboardHeight)
+            if (bottomMargin < keyboardHeight)
+                // Keyboard will cover the EditText. Scroll up rootView to show whole area of EditText just above keyboard.
                 scrollY = keyboardHeight - bottomMargin;
         } else {
             NativeEditPlugin.unityActivity.getWindow().getDecorView().clearFocus();
