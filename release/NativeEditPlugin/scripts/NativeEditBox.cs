@@ -74,10 +74,10 @@ public class NativeEditBox : PluginMsgReceiver
     public UnityEvent onBeginEdit; // only invoke on iOS & Android
 
     private bool _hasNativeEditCreated;
-
     private Text _textComponent;
     private bool _focusOnCreate;
     private bool _visibleOnCreate = true;
+    private bool _isNowEditing;
     private float _fakeTimer = 0f;
 
     private EditBoxConfig _mConfig;
@@ -192,7 +192,8 @@ public class NativeEditBox : PluginMsgReceiver
 
 		//Plugin has to update rect continually otherwise we cannot see characters inputted just now 
 		_fakeTimer += Time.deltaTime;
-		if (_fakeTimer >= androidUpdateDeltaTime && inputField != null && _hasNativeEditCreated && visible)
+		if (inputField != null && _hasNativeEditCreated && visible 
+                && !_isNowEditing && _fakeTimer >= androidUpdateDeltaTime)
 		{
 			SetRectNative(_textComponent.rectTransform);
 			_fakeTimer = 0f;
@@ -272,14 +273,21 @@ public class NativeEditBox : PluginMsgReceiver
         var msg = jsonMsg.GetString("msg");
         if(msg.Equals(MSG_TEXT_BEGIN_EDIT))
         {
+            _isNowEditing = true;
             onBeginEdit?.Invoke();
         }
-        else if(msg.Equals(MSG_TEXT_CHANGE) || msg.Equals(MSG_TEXT_END_EDIT))
+        else if(msg.Equals(MSG_TEXT_CHANGE))
         {
+            inputField.text = jsonMsg.GetString("text");
+        }
+        else if(msg.Equals(MSG_TEXT_END_EDIT))
+        {
+            _isNowEditing = false;
             inputField.text = jsonMsg.GetString("text");
         }
         else if(msg.Equals(MSG_RETURN_PRESSED))
         {
+            _isNowEditing = false;
             returnPressed?.Invoke();
             onReturnPressed?.Invoke();
             if(clearFocusOnReturnPressed)

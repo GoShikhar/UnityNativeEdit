@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputType;
@@ -15,6 +16,7 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -23,10 +25,6 @@ import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-/*
- * "Send" and "Go" return button supported
- */
 
 public class EditBox {
     // Simplest way to notify the EditBox about the application lifecycle.
@@ -50,9 +48,12 @@ public class EditBox {
     private final RelativeLayout layout;
     private int tag;
     private int characterLimit;
-    private InputMethodManager imm;
 
     private static SparseArray<EditBox> editBoxMap = null;
+    private static InputMethodManager inputMethodManager;
+    private static int keyboardHeight = 0;
+    private static int keyboardHeightThreshold = 0;
+
     private static final String MSG_CREATE = "CreateEdit";
     private static final String MSG_REMOVE = "RemoveEdit";
     private static final String MSG_SET_TEXT = "SetText";
@@ -67,7 +68,27 @@ public class EditBox {
     private static final String MSG_RETURN_PRESSED = "ReturnPressed";
 
     static void processRecvJsonMsg(RelativeLayout mainLayout, int nSenderId, final String strJson) {
-        if (editBoxMap == null) editBoxMap = new SparseArray<>();
+        if (editBoxMap == null) {
+            editBoxMap = new SparseArray<>();
+            // add listener to get keyboard height
+            keyboardHeightThreshold = NativeEditPlugin.rootView.getHeight() / 4;
+            NativeEditPlugin.rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                private Rect rect = new Rect();
+                private int windowVisibleBottomWithoutKeyboard = 0;
+
+                @Override
+                public void onGlobalLayout() {
+                    rect.setEmpty();
+                    NativeEditPlugin.rootView.getWindowVisibleDisplayFrame(rect);
+                    int delta = windowVisibleBottomWithoutKeyboard - rect.bottom;
+                    if (delta > keyboardHeightThreshold) {
+                        keyboardHeight = delta;
+                    } else {
+                        windowVisibleBottomWithoutKeyboard = rect.bottom;
+                    }
+                }
+            });
+        }
 
         try {
             JSONObject jsonMsg = new JSONObject(strJson);
@@ -107,21 +128,21 @@ public class EditBox {
     }
 
     private void showKeyboard(boolean isShow) {
-        if (imm == null)
-            imm = (InputMethodManager) NativeEditPlugin.unityActivity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        if (inputMethodManager == null)
+            inputMethodManager = (InputMethodManager) NativeEditPlugin.unityActivity.getSystemService(Activity.INPUT_METHOD_SERVICE);
 
-        int scrollToY;
+        int scrollY = 0;
         if (isShow) {
-            imm.showSoftInput(edit, InputMethodManager.SHOW_FORCED);
+            inputMethodManager.showSoftInput(edit, InputMethodManager.SHOW_FORCED);
             RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) edit.getLayoutParams();
-            // let whole area of NativeEditBox show above keyboard
-            scrollToY = lp.height;
+            int bottomMargin = layout.getHeight() - lp.topMargin - lp.height;
+            if (bottomMargin <= keyboardHeight)
+                scrollY = keyboardHeight - bottomMargin;
         } else {
             NativeEditPlugin.unityActivity.getWindow().getDecorView().clearFocus();
-            imm.hideSoftInputFromWindow(edit.getWindowToken(), 0);
-            scrollToY = 0;
+            inputMethodManager.hideSoftInputFromWindow(edit.getWindowToken(), 0);
         }
-        NativeEditPlugin.rootView.scrollTo(0, scrollToY);
+        NativeEditPlugin.rootView.setScrollY(scrollY);
     }
 
     private void notifyFocusChanged(boolean hasWindowFocus) {
@@ -482,10 +503,10 @@ public class EditBox {
 
     private void SetRect(JSONObject jsonRect) {
         try {
-            double x = jsonRect.getDouble("x") * (double) layout.getWidth();
-            double y = jsonRect.getDouble("y") * (double) layout.getHeight();
-            double width = jsonRect.getDouble("width") * (double) layout.getWidth();
-            double height = jsonRect.getDouble("height") * (double) layout.getHeight();
+            double x = jsonRect.getDouble("x") * layout.getWidth();
+            double y = jsonRect.getDouble("y") * layout.getHeight();
+            double width = jsonRect.getDouble("width") * layout.getWidth();
+            double height = jsonRect.getDouble("height") * layout.getHeight();
 
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams((int) width, (int) height);
             lp.setMargins((int) x, (int) y, 0, 0);
