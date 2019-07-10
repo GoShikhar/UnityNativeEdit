@@ -71,7 +71,7 @@ public class NativeEditBox : PluginMsgReceiver
 
     public event Action returnPressed;
     public UnityEvent onReturnPressed; // only invoke on iOS & Android
-    public UnityEvent OnBeginEdit; // only invoke on iOS & Android
+    public UnityEvent onBeginEdit; // only invoke on iOS & Android
 
     private bool _hasNativeEditCreated;
 
@@ -79,6 +79,10 @@ public class NativeEditBox : PluginMsgReceiver
     private bool _focusOnCreate;
     private bool _visibleOnCreate = true;
     private float _fakeTimer = 0f;
+
+    private EditBoxConfig _mConfig;
+    private Camera _uiCam;
+    private RenderMode _renderMode;
 
     private const string MSG_CREATE = "CreateEdit";
     private const string MSG_REMOVE = "RemoveEdit";
@@ -111,40 +115,6 @@ public class NativeEditBox : PluginMsgReceiver
         }
     }
 
-    public static Rect GetScreenRectFromRectTransform(RectTransform rectTransform)
-    {
-        var corners = new Vector3[4];
-
-        rectTransform.GetWorldCorners(corners);
-
-        var xMin = float.PositiveInfinity;
-        var xMax = float.NegativeInfinity;
-        var yMin = float.PositiveInfinity;
-        var yMax = float.NegativeInfinity;
-
-        for(var i = 0; i < 4; i++)
-        {
-            // For Canvas mode Screen Space - Overlay there is no Camera;
-            // the best solution I've found is to use RectTransformUtility.WorldToScreenPoint with a null camera.
-            // When screen match mode of Canvas Scaler is set to Match Width Or Height, be sure that it matches height completely or there will be mistakes.
-            Vector3 screenCoord = RectTransformUtility.WorldToScreenPoint(null, corners[i]);
-
-            if(screenCoord.x < xMin)
-                xMin = screenCoord.x;
-            if(screenCoord.x > xMax)
-                xMax = screenCoord.x;
-            if(screenCoord.y < yMin)
-                yMin = screenCoord.y;
-            if(screenCoord.y > yMax)
-                yMax = screenCoord.y;
-        }
-
-        var result = new Rect(xMin, Screen.height - yMax, xMax - xMin, yMax - yMin);
-        return result;
-    }
-
-    private EditBoxConfig mConfig;
-
     private void Awake()
     {
         inputField = GetComponent<InputField>();
@@ -155,6 +125,9 @@ public class NativeEditBox : PluginMsgReceiver
         }
 
         _textComponent = inputField.textComponent;
+        _uiCam = Camera.main;
+        var canvas = GetComponentInParent<Canvas>();
+        if(canvas != null) _renderMode = canvas.renderMode;
     }
 
     // Use this for initialization
@@ -227,6 +200,44 @@ public class NativeEditBox : PluginMsgReceiver
 #endif
     }
 
+    private Rect GetScreenRectFromRectTransform(RectTransform rectTransform)
+    {
+        var corners = new Vector3[4];
+
+        rectTransform.GetWorldCorners(corners);
+
+        var xMin = float.PositiveInfinity;
+        var xMax = float.NegativeInfinity;
+        var yMin = float.PositiveInfinity;
+        var yMax = float.NegativeInfinity;
+
+        for(var i = 0; i < 4; i++)
+        {
+            var cam = _renderMode != RenderMode.ScreenSpaceOverlay ? _uiCam : null;
+            // When screen match mode of Canvas Scaler is set to Match Width Or Height, be sure that it matches height completely or there will be mistakes.
+            Vector3 screenCoord = RectTransformUtility.WorldToScreenPoint(cam, corners[i]);
+
+            if(screenCoord.x < xMin)
+                xMin = screenCoord.x;
+            if(screenCoord.x > xMax)
+                xMax = screenCoord.x;
+            if(screenCoord.y < yMin)
+                yMin = screenCoord.y;
+            if(screenCoord.y > yMax)
+                yMax = screenCoord.y;
+        }
+        
+        var result = new Rect(xMin, Screen.height - yMax, xMax - xMin, yMax - yMin);
+        return result;
+    }
+
+    private float GetNativeFontSize()
+    {
+        var rectScreen = GetScreenRectFromRectTransform(_textComponent.rectTransform);
+        var fHeightRatio = rectScreen.height / _textComponent.rectTransform.rect.height;
+        return _textComponent.fontSize * fHeightRatio;
+    }
+
     private void PrepareNativeEdit()
     {
         var placeHolder = inputField.placeholder.GetComponent<Text>();
@@ -234,22 +245,18 @@ public class NativeEditBox : PluginMsgReceiver
         if(useInputFieldFont)
         {
             var font = _textComponent.font;
-            mConfig.font = font.fontNames.Length > 0 ? font.fontNames[0] : "Arial";
+            _mConfig.font = font.fontNames.Length > 0 ? font.fontNames[0] : "Arial";
         }
 
-        mConfig.placeHolder = placeHolder.text;
-        mConfig.placeHolderColor = placeHolder.color;
-        mConfig.characterLimit = inputField.characterLimit;
-
-        var rectScreen = GetScreenRectFromRectTransform(_textComponent.rectTransform);
-        var fHeightRatio = rectScreen.height / _textComponent.rectTransform.rect.height;
-        mConfig.fontSize = _textComponent.fontSize * fHeightRatio;
-
-        mConfig.textColor = _textComponent.color;
-        mConfig.align = _textComponent.alignment.ToString();
-        mConfig.contentType = inputField.contentType.ToString();
-        mConfig.backColor = new Color(1.0f, 1.0f, 1.0f, 0.0f);
-        mConfig.multiline = inputField.lineType != InputField.LineType.SingleLine;
+        _mConfig.placeHolder = placeHolder.text;
+        _mConfig.placeHolderColor = placeHolder.color;
+        _mConfig.characterLimit = inputField.characterLimit;
+        _mConfig.fontSize = GetNativeFontSize();
+        _mConfig.textColor = _textComponent.color;
+        _mConfig.align = _textComponent.alignment.ToString();
+        _mConfig.contentType = inputField.contentType.ToString();
+        _mConfig.backColor = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+        _mConfig.multiline = inputField.lineType != InputField.LineType.SingleLine;
     }
 
     public override void OnPluginMsgDirect(JsonObject jsonMsg)
@@ -265,7 +272,7 @@ public class NativeEditBox : PluginMsgReceiver
         var msg = jsonMsg.GetString("msg");
         if(msg.Equals(MSG_TEXT_BEGIN_EDIT))
         {
-            OnBeginEdit?.Invoke();
+            onBeginEdit?.Invoke();
         }
         else if(msg.Equals(MSG_TEXT_CHANGE) || msg.Equals(MSG_TEXT_END_EDIT))
         {
@@ -299,26 +306,26 @@ public class NativeEditBox : PluginMsgReceiver
             ["y"] = rectScreen.y / Screen.height,
             ["width"] = rectScreen.width / Screen.width,
             ["height"] = rectScreen.height / Screen.height,
-            ["characterLimit"] = mConfig.characterLimit,
-            ["textColor_r"] = mConfig.textColor.r,
-            ["textColor_g"] = mConfig.textColor.g,
-            ["textColor_b"] = mConfig.textColor.b,
-            ["textColor_a"] = mConfig.textColor.a,
-            ["backColor_r"] = mConfig.backColor.r,
-            ["backColor_g"] = mConfig.backColor.g,
-            ["backColor_b"] = mConfig.backColor.b,
-            ["backColor_a"] = mConfig.backColor.a,
-            ["font"] = mConfig.font,
-            ["fontSize"] = mConfig.fontSize,
-            ["contentType"] = mConfig.contentType,
-            ["align"] = mConfig.align,
+            ["characterLimit"] = _mConfig.characterLimit,
+            ["textColor_r"] = _mConfig.textColor.r,
+            ["textColor_g"] = _mConfig.textColor.g,
+            ["textColor_b"] = _mConfig.textColor.b,
+            ["textColor_a"] = _mConfig.textColor.a,
+            ["backColor_r"] = _mConfig.backColor.r,
+            ["backColor_g"] = _mConfig.backColor.g,
+            ["backColor_b"] = _mConfig.backColor.b,
+            ["backColor_a"] = _mConfig.backColor.a,
+            ["font"] = _mConfig.font,
+            ["fontSize"] = _mConfig.fontSize,
+            ["contentType"] = _mConfig.contentType,
+            ["align"] = _mConfig.align,
             ["withDoneButton"] = iOSWithDoneButton,
-            ["placeHolder"] = mConfig.placeHolder,
-            ["placeHolderColor_r"] = mConfig.placeHolderColor.r,
-            ["placeHolderColor_g"] = mConfig.placeHolderColor.g,
-            ["placeHolderColor_b"] = mConfig.placeHolderColor.b,
-            ["placeHolderColor_a"] = mConfig.placeHolderColor.a,
-            ["multiline"] = mConfig.multiline
+            ["placeHolder"] = _mConfig.placeHolder,
+            ["placeHolderColor_r"] = _mConfig.placeHolderColor.r,
+            ["placeHolderColor_g"] = _mConfig.placeHolderColor.g,
+            ["placeHolderColor_b"] = _mConfig.placeHolderColor.b,
+            ["placeHolderColor_a"] = _mConfig.placeHolderColor.a,
+            ["multiline"] = _mConfig.multiline
         };
         switch(singleLineReturnKeyType)
         {
@@ -383,12 +390,10 @@ public class NativeEditBox : PluginMsgReceiver
         SendPluginMsg(jsonMsg);
     }
 
-    public void SetTextSize(RectTransform rectTrans)
+    public void SetTextSize()
     {
-        var rectScreen = GetScreenRectFromRectTransform(rectTrans);
-        var fontRectHeightRatio = rectScreen.height / _textComponent.rectTransform.rect.height;
-        var fontSize = _textComponent.fontSize * fontRectHeightRatio;
-        if(Math.Abs(mConfig.fontSize - fontSize) > 0.1f)
+        var fontSize = GetNativeFontSize();
+        if(Math.Abs(_mConfig.fontSize - fontSize) > 0.1f)
         {
             var sizeMsg = new JsonObject
             {
@@ -396,7 +401,7 @@ public class NativeEditBox : PluginMsgReceiver
                 ["fontSize"] = fontSize
             };
             SendPluginMsg(sizeMsg);
-            mConfig.fontSize = fontSize;
+            _mConfig.fontSize = fontSize;
         }
     }
 

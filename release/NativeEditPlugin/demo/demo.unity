@@ -846,7 +846,7 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  OnBeginEdit:
+  onBeginEdit:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 837705503}
@@ -1689,7 +1689,7 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  OnBeginEdit:
+  onBeginEdit:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 837705503}
