@@ -1,23 +1,23 @@
 package com.bkmin.android;
 
-import com.unity3d.player.*;
-
 import android.app.Activity;
-import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
+import com.unity3d.player.UnityPlayer;
+
 import org.json.JSONObject;
 
 public class NativeEditPlugin {
     public static Activity unityActivity;
-    public static RelativeLayout mainLayout;
+    public static ViewGroup rootView;
+    private static RelativeLayout mainLayout;
     private static ViewGroup topViewGroup;
     private static String unityName = "";
 
-    public static final String LOG_TAG = "NativeEditPlugin";
+    static final String LOG_TAG = "NativeEditPlugin";
 
     private static View getLeafView(View view) {
         if (view instanceof ViewGroup) {
@@ -45,7 +45,7 @@ public class NativeEditPlugin {
                 if (mainLayout != null)
                     topViewGroup.removeView(mainLayout);
 
-                final ViewGroup rootView = unityActivity.findViewById(android.R.id.content);
+                rootView = unityActivity.findViewById(android.R.id.content);
                 View topMostView = getLeafView(rootView);
                 topViewGroup = (ViewGroup) topMostView.getParent();
                 mainLayout = new RelativeLayout(unityActivity);
@@ -63,9 +63,8 @@ public class NativeEditPlugin {
                                                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                                                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                                                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                                | View.SYSTEM_UI_FLAG_FULLSCREEN;
-                                if (Build.VERSION.SDK_INT >= 19)
-                                    systemUiVisibilitySettings |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+                                                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                                                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
                                 rootView.setSystemUiVisibility(systemUiVisibilitySettings);
                             }
                         });
@@ -90,7 +89,7 @@ public class NativeEditPlugin {
     public static String SendUnityMsgToPlugin(final int nSenderId, final String jsonMsg) {
         final Runnable task = new Runnable() {
             public void run() {
-                EditBox.processRecvJsonMsg(nSenderId, jsonMsg);
+                EditBox.processRecvJsonMsg(mainLayout, nSenderId, jsonMsg);
             }
         };
         unityActivity.runOnUiThread(task);

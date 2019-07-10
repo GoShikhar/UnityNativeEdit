@@ -156,7 +156,7 @@ public class PluginMsgHandler : MonoBehaviour
 		// NativeEditBox text would be hidden after using Unity's Handheld.PlayFullScreenMovie().
 		if (smAndroid == null)
 			smAndroid = new AndroidJavaClass("com.bkmin.android.NativeEditPlugin");
-		smAndroid.CallStatic("InitPluginMsgHandler", this.name);
+		smAndroid.CallStatic("InitPluginMsgHandler", name);
 	}
 	
 	public void FinalizeHandler()
@@ -182,18 +182,18 @@ public class PluginMsgHandler : MonoBehaviour
 #if UNITY_EDITOR || UNITY_STANDALONE
         return new JsonObject();
 #else
-			jsonMsg["senderId"] = nSenderId;
-			string strJson = jsonMsg.Serialize();
+        jsonMsg["senderId"] = nSenderId;
+        string strJson = jsonMsg.Serialize();
 
-			string strRet = "";
-			#if UNITY_IPHONE
-			strRet = _iOS_SendUnityMsgToPlugin(nSenderId, strJson);
-			#elif UNITY_ANDROID 
-			strRet = smAndroid.CallStatic<string>("SendUnityMsgToPlugin", nSenderId, strJson);
-			#endif
+        string strRet = "";
+        #if UNITY_IPHONE
+        strRet = _iOS_SendUnityMsgToPlugin(nSenderId, strJson);
+        #elif UNITY_ANDROID 
+        strRet = smAndroid.CallStatic<string>("SendUnityMsgToPlugin", nSenderId, strJson);
+        #endif
 
-			JsonObject jsonRet = new JsonObject(strRet);
-			return jsonRet;
+        JsonObject jsonRet = new JsonObject(strRet);
+        return jsonRet;
 #endif
     }
 }

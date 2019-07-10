@@ -1,13 +1,9 @@
 package com.bkmin.android;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputType;
@@ -21,9 +17,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.EditText;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /*
  * "Send" and "Go" return button supported
@@ -51,8 +50,9 @@ public class EditBox {
     private final RelativeLayout layout;
     private int tag;
     private int characterLimit;
+    private InputMethodManager imm;
 
-    private static SparseArray<EditBox> mapEditBox = null;
+    private static SparseArray<EditBox> editBoxMap = null;
     private static final String MSG_CREATE = "CreateEdit";
     private static final String MSG_REMOVE = "RemoveEdit";
     private static final String MSG_SET_TEXT = "SetText";
@@ -66,19 +66,19 @@ public class EditBox {
     private static final String MSG_ANDROID_KEY_DOWN = "AndroidKeyDown";
     private static final String MSG_RETURN_PRESSED = "ReturnPressed";
 
-    public static void processRecvJsonMsg(int nSenderId, final String strJson) {
-        if (mapEditBox == null) mapEditBox = new SparseArray<>();
+    static void processRecvJsonMsg(RelativeLayout mainLayout, int nSenderId, final String strJson) {
+        if (editBoxMap == null) editBoxMap = new SparseArray<>();
 
         try {
             JSONObject jsonMsg = new JSONObject(strJson);
             String msg = jsonMsg.getString("msg");
 
             if (msg.equals(MSG_CREATE)) {
-                EditBox nb = new EditBox(NativeEditPlugin.mainLayout);
+                EditBox nb = new EditBox(mainLayout);
                 nb.Create(nSenderId, jsonMsg);
-                mapEditBox.append(nSenderId, nb);
+                editBoxMap.append(nSenderId, nb);
             } else {
-                EditBox eb = mapEditBox.get(nSenderId);
+                EditBox eb = editBoxMap.get(nSenderId);
                 if (eb != null) {
                     eb.processJsonMsg(jsonMsg);
                 } else {
@@ -107,14 +107,21 @@ public class EditBox {
     }
 
     private void showKeyboard(boolean isShow) {
-        InputMethodManager imm = (InputMethodManager) NativeEditPlugin.unityActivity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        if (imm == null)
+            imm = (InputMethodManager) NativeEditPlugin.unityActivity.getSystemService(Activity.INPUT_METHOD_SERVICE);
 
+        int scrollToY;
         if (isShow) {
             imm.showSoftInput(edit, InputMethodManager.SHOW_FORCED);
+            RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) edit.getLayoutParams();
+            // let whole area of NativeEditBox show above keyboard
+            scrollToY = lp.height;
         } else {
             NativeEditPlugin.unityActivity.getWindow().getDecorView().clearFocus();
             imm.hideSoftInputFromWindow(edit.getWindowToken(), 0);
+            scrollToY = 0;
         }
+        NativeEditPlugin.rootView.scrollTo(0, scrollToY);
     }
 
     private void notifyFocusChanged(boolean hasWindowFocus) {
@@ -173,12 +180,6 @@ public class EditBox {
             String placeHolder = jsonObj.getString("placeHolder");
 
             String font = jsonObj.getString("font");
-            double fontSize = jsonObj.getDouble("fontSize");
-
-            double x = jsonObj.getDouble("x") * (double) layout.getWidth();
-            double y = jsonObj.getDouble("y") * (double) layout.getHeight();
-            double width = jsonObj.getDouble("width") * (double) layout.getWidth();
-            double height = jsonObj.getDouble("height") * (double) layout.getHeight();
             characterLimit = jsonObj.getInt("characterLimit");
 
             int textColor_r = (int) (255.0f * jsonObj.getDouble("textColor_r"));
@@ -211,7 +212,7 @@ public class EditBox {
             edit.setText("");
             edit.setHint(placeHolder);
 
-            SetRect((int) x, (int) y, (int) width, (int) height);
+            this.SetRect(jsonObj);
             edit.setPadding(0, 0, 0, 0);
 
             int editInputType = 0;
@@ -278,8 +279,6 @@ public class EditBox {
                             editInputType |= InputType.TYPE_NUMBER_VARIATION_PASSWORD | InputType.TYPE_TEXT_VARIATION_PASSWORD;
                             break;
                     }
-                    if (multiline)
-                        editInputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
                     break;
 
                 default:
@@ -287,6 +286,8 @@ public class EditBox {
                     break; // No action
 
             }
+            if (multiline)
+                editInputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
             edit.setInputType(editInputType);
 
             int gravity = 0;
@@ -339,7 +340,7 @@ public class EditBox {
                 }
             edit.setImeOptions(imeOptions);
 
-            edit.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) fontSize);
+            this.SetTextSize(jsonObj);
             edit.setTextColor(Color.argb(textColor_a, textColor_r, textColor_g, textColor_b));
             edit.setBackgroundColor(Color.argb(backColor_a, backColor_r, backColor_g, backColor_b));
             edit.setHintTextColor(Color.argb(placeHolderColor_a, placeHolderColor_r, placeHolderColor_g, placeHolderColor_b));
@@ -427,7 +428,7 @@ public class EditBox {
     private void Remove() {
         if (edit != null) {
             layout.removeView(edit);
-            mapEditBox.remove(this.tag);
+            editBoxMap.remove(this.tag);
         }
         edit = null;
     }
@@ -485,16 +486,12 @@ public class EditBox {
             double y = jsonRect.getDouble("y") * (double) layout.getHeight();
             double width = jsonRect.getDouble("width") * (double) layout.getWidth();
             double height = jsonRect.getDouble("height") * (double) layout.getHeight();
-            SetRect((int) x, (int) y, (int) width, (int) height);
+
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams((int) width, (int) height);
+            lp.setMargins((int) x, (int) y, 0, 0);
+            edit.setLayoutParams(lp);
         } catch (JSONException e) {
         }
-    }
-
-    private void SetRect(int x, int y, int width, int height) {
-        Rect rect = new Rect(x, y, x + width, y + height);
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(width, height);
-        lp.setMargins(rect.left, rect.top, 0, 0);
-        edit.setLayoutParams(lp);
     }
 
     private void SetVisible(boolean bVisible) {
