@@ -289,8 +289,10 @@ public class NativeEditBox_TMP : PluginMsgReceiver
         else if (msg.Equals(MSG_RETURN_PRESSED))
         {
             _isNowEditing = false;
+            inputField.text = jsonMsg.GetString("text");
             returnPressed?.Invoke();
             onReturnPressed?.Invoke();
+
             if (clearFocusOnReturnPressed)
                 SetFocus(false);
         }
