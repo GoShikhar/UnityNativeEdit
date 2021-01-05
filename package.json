@@ -1,0 +1,31 @@
+{
+  "name": "com.goshikhar.unitynativeedit",
+  "displayName": "UnityNativeEdit",
+  "description": "UnityNativeEdit provides Native android text input field components for Unity UI.\n It supports text select, copy, paste features in input fields and works with TextmeshPro too.",
+  "version": "1.0.1",
+  "unity": "2020.1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GoShikhar/UnityNativeEdit.git"
+  },
+  "author": {
+    "name": "GoShikhar",
+    "email": "goshikhar@gmail.com",
+    "url": "https://github.com/GoShikhar/UnityNativeEdit"
+  },
+  "dependencies": {},
+  "keywords": [
+    "ui",
+    "native edit",
+    "android",
+    "android native edit"
+  ],
+  "samples": [
+    {
+      "displayName": "Demo",
+      "description": "UnityNativeEdit Demo",
+      "path": "Samples~/Demo"
+    }
+  ]
+}

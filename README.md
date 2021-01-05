@@ -1,5 +1,5 @@
 ## UnityNativeEdit v1.6
-Unity Native Input Plugin for both iOS and Android (UGUI InputField compatible).
+Unity Native Input Plugin for both iOS and Android (UGUI InputField & TextmeshPro compatible).
 
 This means you don't need a separate 'Unity' Input box and you can use all native text functions such as `Select`, `Copy` and `Paste`.
 
@@ -7,6 +7,7 @@ This means you don't need a separate 'Unity' Input box and you can use all nativ
 1. Simply copy the files in `release/NativeEditPlugin` into your existing unity project asset folder.
 2. Attach ```NativeEditBox``` script to your UnityUI ```InputField```object.
 3. Build and run on your android or ios device!
+4. The Return key is binded to the TextMeshPro's invokable function. So, just add a callback (optional) to your textmeshpro input field and the native edit box will fill the TextmeshPro input field with the current text.
 
 ### Building the Android plugin
 If you want to tinker with the project yourself you need to build the Android project again in AndroidStudio (for iOS you can just modify the Objective-C code and it will get built at the same time as the Unity project). 
