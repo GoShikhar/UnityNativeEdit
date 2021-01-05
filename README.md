@@ -1,5 +1,5 @@
 ## UnityNativeEdit v1.6
-Unity Native Input Plugin for both iOS and Android (UGUI InputField & TextmeshPro compatible).
+Unity Native Input Plugin for both iOS and Android (UGUI InputField &  ```TextmeshPro``` compatible).
 
 This means you don't need a separate 'Unity' Input box and you can use all native text functions such as `Select`, `Copy` and `Paste`.
 
@@ -8,7 +8,7 @@ This means you don't need a separate 'Unity' Input box and you can use all nativ
 OR
 Install in Unity via UPM using the git url https://github.com/GoShikhar/UnityNativeEdit.git
 
-2. Attach ```NativeEditBox``` script to your UnityUI ```InputField```object.
+2. Attach ```NativeEditBox``` script to your  ```UnityUI InputField``` or ```TMP_InputField``` object.
 
 3. Build and run on your android or ios device!
 
@@ -25,7 +25,7 @@ If you want to tinker with the project yourself you need to build the Android pr
 5. To test in the demo Unity project copy the `nativeeditplugin-release.aar` file (from the output directory) to the `release\NativeEditPlugin\Plugins\Android` directory. This file is symlinked to the Unity demo project.
 
 ### Etc
-1. NativeEditBox will work with delegate defined in your Unity UI InputField, `On Value Change` and `End Edit`
+1. NativeEditBox will work with delegate defined in your Unity UI InputField, `On Value Change` and `End Edit`, if you're using TMP_InputField then the delegates are auto Invoked on your TMP_InputField.
 2. It's open source and free to use/redistribute!
 
 - - -
